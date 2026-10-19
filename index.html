@@ -454,7 +454,7 @@ html[dir="ltr"] .sidebar-link { text-align: left; }
 
     <label class="filelabel">
       ⇧ استيراد CSV
-      <input id="fileInput" type="file" accept=".csv,text/csv" hidden>
+      <input id="fileInput" type="file" accept=".xlsx,.xls,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" hidden>
     </label>
 
     <button type="button" id="exportBtn">⇩ تصدير Excel</button>
@@ -539,7 +539,7 @@ html[dir="ltr"] .sidebar-link { text-align: left; }
 
 <footer>
   نسخة تجريبية تحفظ البيانات محليًا في المتصفح.
-  الاستيراد الحالي يدعم CSV.
+  يمكن استيراد ملف Excel بصيغتي XLSX وXLS أو CSV. ملف Excel يتطلب اتصالًا بالإنترنت لتحميل مكتبة القراءة.
 </footer>
 
 </div>
@@ -613,6 +613,7 @@ html[dir="ltr"] .sidebar-link { text-align: left; }
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
 const STORAGE_KEY = "tanzeem-talabat-demo-v2";
 
@@ -654,7 +655,7 @@ const translations = {
   "إجراء":"Action",
   "لا توجد قطع مطابقة للبحث.":"No parts match your search.",
   "الحساب التقديري يعتمد على المبيعات والمخزون والكمية تحت الطلب،\n    مع التخطيط لتغطية 9 أشهر.":"The estimate is based on sales, stock, and items on order,\n    with a 9-month coverage plan.",
-  "نسخة تجريبية تحفظ البيانات محليًا في المتصفح.\n  الاستيراد الحالي يدعم CSV.":"Demo version; data is saved locally in this browser.\n  Import currently supports CSV.",
+  "نسخة تجريبية تحفظ البيانات محليًا في المتصفح.\n  يمكن استيراد ملف Excel بصيغتي XLSX وXLS أو CSV. ملف Excel يتطلب اتصالًا بالإنترنت لتحميل مكتبة القراءة.":"Demo version; data is saved locally in this browser.\n  Import currently supports CSV.",
   "القائمة الرئيسية":"Main Menu",
   "إغلاق القائمة":"Close menu",
   "فتح القائمة":"Open menu",
@@ -1025,90 +1026,142 @@ function normalizeHeader(value) {
     .replace(/[\s_\-]+/g, "");
 }
 
+function cleanPartNumber(value) {
+  if (value === null || value === undefined) return "";
+  if (typeof value === "number" && Number.isFinite(value)) return String(Math.trunc(value));
+  return String(value).trim();
+}
+function numericValue(value) {
+  if (value === null || value === undefined || value === "") return 0;
+  const n = Number(String(value).replace(/[,\s]/g, ""));
+  return Number.isFinite(n) ? n : 0;
+}
+function findHeaderRow(rows, requiredNames) {
+  return rows.findIndex(row => {
+    const cells = row.map(normalizeHeader);
+    return requiredNames.every(name => cells.some(cell => cell.includes(normalizeHeader(name))));
+  });
+}
+function rowsFromSheet(sheet) {
+  return XLSX.utils.sheet_to_json(sheet, {header: 1, defval: "", raw: false});
+}
+function importWorkbook(workbook) {
+  const sealsName = workbook.SheetNames.find(n => normalizeHeader(n) === "seals");
+  const orderName = workbook.SheetNames.find(n => normalizeHeader(n) === "onorder");
+  if (!sealsName || !orderName) throw new Error("يجب أن يحتوي ملف Excel على ورقتي SEALS وON ORDER.");
+
+  const sealsRows = rowsFromSheet(workbook.Sheets[sealsName]);
+  const sealsHeaderIndex = findHeaderRow(sealsRows, ["Part Number", "Name", "Available QTY to Sale"]);
+  if (sealsHeaderIndex < 0) throw new Error("لم أجد عناوين الأعمدة المطلوبة في ورقة SEALS.");
+  const sh = sealsRows[sealsHeaderIndex].map(normalizeHeader);
+  const col = names => sh.findIndex(h => names.some(n => h.includes(normalizeHeader(n))));
+  const si = {
+    part: col(["Part Number"]), name: col(["Name"]), stock: col(["Available QTY to Sale"]),
+    sales26: col(["Total Sales-Return (2026)"]), sales25: col(["Total Sales-Return (2025)"])
+  };
+  if (si.part < 0 || si.name < 0) throw new Error("تعذر تحديد رقم القطعة أو الاسم في ورقة SEALS.");
+
+  const orderRows = rowsFromSheet(workbook.Sheets[orderName]);
+  const orderHeaderIndex = findHeaderRow(orderRows, ["Item number2", "Description", "Quantity"]);
+  if (orderHeaderIndex < 0) throw new Error("لم أجد عناوين الأعمدة المطلوبة في ورقة ON ORDER.");
+  const oh = orderRows[orderHeaderIndex].map(normalizeHeader);
+  const oi = {
+    part: oh.findIndex(h => h.includes(normalizeHeader("Item number2"))),
+    name: oh.findIndex(h => h.includes(normalizeHeader("Description"))),
+    qty: oh.findIndex(h => h === normalizeHeader("Quantity") || h.includes(normalizeHeader("Quantity")))
+  };
+  if (oi.part < 0 || oi.qty < 0) throw new Error("تعذر تحديد رقم القطعة أو الكمية في ورقة ON ORDER.");
+
+  const orderMap = new Map();
+  for (const row of orderRows.slice(orderHeaderIndex + 1)) {
+    const part = cleanPartNumber(row[oi.part]);
+    if (!part) continue;
+    const key = part.toLowerCase();
+    const old = orderMap.get(key) || {qty: 0, name: "", part};
+    old.qty += numericValue(row[oi.qty]);
+    if (!old.name && oi.name >= 0) old.name = String(row[oi.name] || "").trim();
+    orderMap.set(key, old);
+  }
+
+  const imported = new Map();
+  for (const row of sealsRows.slice(sealsHeaderIndex + 1)) {
+    const part = cleanPartNumber(row[si.part]);
+    if (!part) continue;
+    const key = part.toLowerCase();
+    const ordered = orderMap.get(key);
+    imported.set(key, {
+      part, alt: "", name: String(row[si.name] || ordered?.name || "غير محدد").trim(),
+      stock: numericValue(row[si.stock]), onOrder: ordered?.qty || 0,
+      sales25: numericValue(row[si.sales25]), sales26: numericValue(row[si.sales26])
+    });
+  }
+  for (const [key, ordered] of orderMap) {
+    if (!imported.has(key)) imported.set(key, {
+      part: ordered.part || key, alt: "", name: ordered.name || "غير محدد", stock: 0,
+      onOrder: ordered.qty, sales25: 0, sales26: 0
+    });
+  }
+
+  const previousByPart = new Map(parts.map(p => [String(p.part).toLowerCase(), p]));
+  let updated = 0, added = 0;
+  const result = [];
+  for (const [key, item] of imported) {
+    const previous = previousByPart.get(key);
+    if (previous) {
+      // Preserve the alternate number entered manually; source workbook has no alternate-number column.
+      item.alt = previous.alt || "";
+      updated++;
+    } else added++;
+    result.push(item);
+  }
+  parts = result;
+  saveData();
+  renderTable();
+  alert("تم استيراد ملف Excel بنجاح.\nعدد الأصناف: " + parts.length +
+    "\nتمت مطابقة " + updated + " قطعة مع البيانات السابقة.\nأضيفت " + added + " قطعة جديدة.\n\nتم جمع الكميات المتكررة في ورقة ON ORDER حسب رقم القطعة.");
+}
+
 $("fileInput").addEventListener("change", async function (event) {
   const file = event.target.files[0];
   if (!file) return;
-
   try {
-    const rows = parseCSV(await file.text());
-
-    if (rows.length < 2) {
-      throw new Error("الملف لا يحتوي على بيانات كافية.");
-    }
-
-    const headers = rows[0].map(normalizeHeader);
-
-    const findColumn = names => headers.findIndex(header =>
-      names.some(name => header.includes(normalizeHeader(name)))
-    );
-
-    const columns = {
-      part: findColumn(["رقمالقطعة", "partnumber", "partno", "part"]),
-      alt: findColumn(["الرقمالبديل", "alternatenumber", "alternate"]),
-      name: findColumn(["اسمالقطعة", "description", "partname", "name"]),
-      stock: findColumn(["الكميةالحالية", "stock", "onhand"]),
-      onOrder: findColumn(["الكميةتحتالطلب", "onorder", "ordered"]),
-      sales25: findColumn(["مبيعات2025", "sales2025", "2025sales"]),
-      sales26: findColumn(["مبيعات2026", "sales2026", "2026sales"])
-    };
-
-    if (columns.part < 0) {
-      throw new Error("لم أجد عمود رقم القطعة في الملف.");
-    }
-
-    let updated = 0;
-    let added = 0;
-
-    for (const row of rows.slice(1)) {
-      const partNumber = String(row[columns.part] || "").trim();
-      if (!partNumber) continue;
-
-      const existingIndex = parts.findIndex(p =>
-        p.part.toLowerCase() === partNumber.toLowerCase()
-      );
-
-      const previous = existingIndex >= 0 ? parts[existingIndex] : {};
-
-      const readValue = key => {
-        const column = columns[key];
-        if (column < 0 || row[column] === undefined || row[column] === "") {
-          return previous[key] ?? 0;
-        }
-        return Number(String(row[column]).replace(/,/g, "")) || 0;
+    const isExcel = /\.(xlsx|xls)$/i.test(file.name);
+    if (isExcel) {
+      if (typeof XLSX === "undefined") throw new Error("تعذر تحميل قارئ Excel. تأكد من اتصال الإنترنت ثم أعد المحاولة.");
+      const workbook = XLSX.read(await file.arrayBuffer(), {type: "array", cellDates: false});
+      importWorkbook(workbook);
+    } else {
+      const rows = parseCSV(await file.text());
+      if (rows.length < 2) throw new Error("ملف CSV لا يحتوي على بيانات كافية.");
+      const headerIndex = rows.findIndex(row => row.some(cell => /part\s*number|رقم\s*القطعة/i.test(String(cell))));
+      const headers = rows[Math.max(0, headerIndex)].map(normalizeHeader);
+      const findColumn = names => headers.findIndex(header => names.some(name => header.includes(normalizeHeader(name))));
+      const columns = {
+        part: findColumn(["رقم القطعة", "partnumber", "partno", "part"]),
+        alt: findColumn(["الرقم البديل", "alternatenumber", "alternate"]),
+        name: findColumn(["اسم القطعة", "description", "partname", "name"]),
+        stock: findColumn(["الكمية الحالية", "stock", "onhand"]),
+        onOrder: findColumn(["الكمية تحت الطلب", "onorder", "ordered"]),
+        sales25: findColumn(["مبيعات 2025", "sales2025", "2025sales"]),
+        sales26: findColumn(["مبيعات 2026", "sales2026", "2026sales"])
       };
-
-      const item = {
-        part: partNumber,
-        alt: columns.alt >= 0 ? row[columns.alt] || previous.alt || "" : previous.alt || "",
-        name: columns.name >= 0 ? row[columns.name] || previous.name || "غير محدد" : previous.name || "غير محدد",
-        stock: readValue("stock"),
-        onOrder: readValue("onOrder"),
-        sales25: readValue("sales25"),
-        sales26: readValue("sales26")
-      };
-
-      if (existingIndex >= 0) {
-        parts[existingIndex] = item;
-        updated++;
-      } else {
-        parts.push(item);
-        added++;
+      if (columns.part < 0) throw new Error("لم أجد عمود رقم القطعة في ملف CSV.");
+      let updated = 0, added = 0;
+      for (const row of rows.slice(Math.max(0, headerIndex) + 1)) {
+        const partNumber = cleanPartNumber(row[columns.part]);
+        if (!partNumber) continue;
+        const i = parts.findIndex(p => String(p.part).toLowerCase() === partNumber.toLowerCase());
+        const previous = i >= 0 ? parts[i] : {};
+        const readValue = key => columns[key] < 0 || row[columns[key]] === undefined || row[columns[key]] === "" ? (previous[key] ?? 0) : numericValue(row[columns[key]]);
+        const item = {part: partNumber, alt: columns.alt >= 0 ? row[columns.alt] || previous.alt || "" : previous.alt || "", name: columns.name >= 0 ? row[columns.name] || previous.name || "غير محدد" : previous.name || "غير محدد", stock: readValue("stock"), onOrder: readValue("onOrder"), sales25: readValue("sales25"), sales26: readValue("sales26")};
+        if (i >= 0) { parts[i] = item; updated++; } else { parts.push(item); added++; }
       }
+      saveData(); renderTable();
+      alert("تم الاستيراد بنجاح.\nتم تحديث " + updated + " قطعة وإضافة " + added + " قطعة جديدة.");
     }
-
-    saveData();
-    renderTable();
-
-    alert(
-      "تم الاستيراد بنجاح.\n" +
-      "تم تحديث " + updated + " قطعة.\n" +
-      "تمت إضافة " + added + " قطعة جديدة."
-    );
   } catch (error) {
     alert("تعذر الاستيراد: " + error.message);
-  } finally {
-    event.target.value = "";
-  }
+  } finally { event.target.value = ""; }
 });
 
 /* تصدير جدول يفتح في Excel */
