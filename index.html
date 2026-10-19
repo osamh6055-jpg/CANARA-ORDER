@@ -4,1216 +4,156 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>تنظيم الطلبات</title>
-
 <style>
-:root {
-  color-scheme: light dark;
-  --bg: light-dark(#f5f5f3,#111);
-  --surface: light-dark(#fff,#1c1c1c);
-  --surface2: light-dark(#f0f0ed,#292929);
-  --text: light-dark(#171717,#f6f6f4);
-  --muted: light-dark(#666,#b8b8b8);
-  --line: light-dark(#deded9,#414141);
-  --accent: light-dark(#f8c900,#ffd21c);
-  --danger: light-dark(#a43131,#ff9999);
-}
-
+:root { color-scheme: light dark; --bg: light-dark(#f5f5f3,#111111); --surface: light-dark(#ffffff,#1c1c1c); --surface2: light-dark(#f0f0ed,#292929); --text: light-dark(#171717,#f6f6f4); --muted: light-dark(#666666,#b8b8b8); --line: light-dark(#deded9,#414141); --accent: light-dark(#f8c900,#ffd21c); --accentText: #171717; --warn: light-dark(#fff4c2,#3b3210); --danger: light-dark(#a43131,#ff9999); }
 * { box-sizing: border-box; }
-
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font-family: "Segoe UI", Tahoma, Arial, sans-serif;
-}
-
-#app {
-  min-height: 100vh;
-  padding: 24px;
-  border-top: 7px solid var(--accent);
-}
-
-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 18px;
-  flex-wrap: wrap;
-  margin-bottom: 22px;
-}
-
-.brand {
-  display: flex;
-  gap: 13px;
-  align-items: center;
-}
-
-.logo {
-  width: 64px;
-  height: 64px;
-  border-radius: 8px;
-  background: #fff;
-  border: 1px solid var(--line);
-  overflow: hidden;
-  box-shadow: 4px 4px 0 #171717;
-  flex: 0 0 64px;
-}
-
-.logo img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  padding: 4px;
-}
-
-h1 {
-  margin: 0;
-  font-size: 27px;
-  font-weight: 800;
-}
-
-.sub {
-  color: var(--muted);
-  font-size: 13px;
-  margin-top: 5px;
-  line-height: 1.8;
-}
-
-.actions, .toolbar-left {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-}
-
-button, .filelabel {
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--surface);
-  color: var(--text);
-  padding: 10px 14px;
-  font: inherit;
-  font-size: 13px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-}
-
-button.primary {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #171717;
-  font-weight: 800;
-  box-shadow: 0 3px 0 #171717;
-}
-
-input, select {
-  background: var(--surface);
-  color: var(--text);
-  border: 1px solid var(--line);
-  border-radius: 9px;
-  padding: 10px;
-  font: inherit;
-  font-size: 13px;
-  min-width: 0;
-}
-
-.stats {
-  display: grid;
-  grid-template-columns: repeat(4,minmax(0,1fr));
-  gap: 12px;
-  margin-bottom: 18px;
-}
-
-.stat {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-top: 3px solid var(--accent);
-  border-radius: 4px 4px 12px 12px;
-  padding: 16px;
-}
-
-.label {
-  color: var(--muted);
-  font-size: 13px;
-}
-
-.value {
-  font-size: 27px;
-  font-weight: 800;
-  margin-top: 8px;
-}
-
-.note {
-  color: var(--muted);
-  font-size: 12px;
-  margin-top: 5px;
-}
-
-.panel {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 15px;
-  overflow: hidden;
-}
-
-.toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  padding: 14px;
-  border-bottom: 1px solid var(--line);
-}
-
-.search {
-  width: min(300px,75vw);
-}
-
-.smallnote {
-  color: var(--muted);
-  font-size: 12px;
-  padding: 12px 14px;
-  line-height: 1.8;
-}
-
-.tablewrap {
-  width: 100%;
-  overflow: auto;
-  max-height: 58vh;
-}
-
-table {
-  border-collapse: separate;
-  border-spacing: 0;
-  width: 100%;
-  min-width: 1200px;
-  font-size: 13px;
-}
-
-th, td {
-  padding: 12px;
-  border-bottom: 1px solid var(--line);
-  text-align: right;
-  white-space: nowrap;
-}
-
-th {
-  background: var(--surface2);
-  border-bottom: 3px solid var(--accent);
-  font-weight: 800;
-  position: sticky;
-  top: 0;
-  z-index: 1;
-}
-
-tbody tr:hover {
-  background: var(--surface2);
-}
-
-.part {
-  direction: ltr;
-  display: inline-block;
-  font-weight: 700;
-}
-
-.need {
-  font-weight: 800;
-  color: var(--danger);
-}
-
-.rowbtn {
-  padding: 6px 9px;
-  font-size: 12px;
-}
-
-.empty {
-  text-align: center;
-  padding: 35px;
-  color: var(--muted);
-}
-
-footer {
-  color: var(--muted);
-  font-size: 11px;
-  margin-top: 14px;
-  line-height: 1.8;
-}
-
-/* نافذة إضافة وتعديل القطع */
-.modalback {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: #0009;
-  z-index: 9999;
-  padding: 18px;
-  align-items: center;
-  justify-content: center;
-}
-
-.modalback.show {
-  display: flex;
-}
-
-.modal {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  padding: 20px;
-  width: min(560px,100%);
-  max-height: 90vh;
-  overflow: auto;
-}
-
-.modal h2 {
-  font-size: 19px;
-  margin: 0 0 16px;
-}
-
-.formgrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.field label {
-  font-size: 13px;
-  color: var(--muted);
-}
-
-.field input {
-  width: 100%;
-}
-
-.modalactions {
-  display: flex;
-  gap: 8px;
-  margin-top: 18px;
-}
-
-.tip {
-  background: var(--surface2);
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 12px;
-  color: var(--muted);
-  font-size: 12px;
-  margin-top: 12px;
-  line-height: 1.8;
-}
-
-
-/* القائمة الجانبية */
-.menu-toggle {
-  width: 42px;
-  height: 42px;
-  padding: 9px;
-  display: inline-flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 5px;
-  border-radius: 10px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  box-shadow: none;
-  flex: 0 0 42px;
-}
-.menu-toggle span {
-  display: block;
-  width: 21px;
-  height: 2px;
-  border-radius: 2px;
-  background: var(--text);
-}
-.brand { gap: 12px; }
-.sidebar-overlay {
-  position: fixed;
-  inset: 0;
-  background: #0008;
-  z-index: 10000;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity .22s ease, visibility .22s ease;
-}
-.sidebar-overlay.open { opacity: 1; visibility: visible; }
-.sidebar {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: min(310px, 86vw);
-  height: 100%;
-  padding: 22px 16px;
-  background: var(--surface);
-  border-left: 1px solid var(--line);
-  box-shadow: -10px 0 35px #0002;
-  transform: translateX(105%);
-  transition: transform .22s ease;
-}
-.sidebar-overlay.open .sidebar { transform: translateX(0); }
-html[dir="ltr"] .sidebar { right: auto; left: 0; border-left: 0; border-right: 1px solid var(--line); box-shadow: 10px 0 35px #0002; transform: translateX(-105%); }
-html[dir="ltr"] .sidebar-overlay.open .sidebar { transform: translateX(0); }
-html[dir="ltr"] .sidebar-link { text-align: left; }
-.sidebar-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 22px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid var(--line);
-}
-.sidebar-title { font-weight: 800; font-size: 17px; }
-.sidebar-close { padding: 7px 11px; font-size: 20px; }
-.sidebar-link {
-  width: 100%;
-  justify-content: flex-start;
-  text-align: right;
-  background: var(--surface2);
-  border-color: var(--accent);
-  font-weight: 800;
-}
-.sidebar-link::before {
-  content: "";
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--accent);
-  flex: 0 0 7px;
-}
-@media (prefers-reduced-motion: reduce) {
-  .sidebar-overlay, .sidebar { transition: none; }
-}
-
-@media(max-width:800px) {
-  #app { padding: 14px; }
-  h1 { font-size: 23px; }
-  .stats { grid-template-columns: repeat(2,minmax(0,1fr)); }
-  .formgrid { grid-template-columns: 1fr; }
-}
-
-@media print {
-  header .actions, .toolbar-left, .rowbtn,
-  .smallnote, footer, .modalback {
-    display: none !important;
-  }
-
-  .tablewrap {
-    overflow: visible;
-    max-height: none;
-  }
-
-  table {
-    min-width: 0;
-    width: 100%;
-    font-size: 8px;
-  }
-
-  th, td {
-    white-space: normal;
-    padding: 4px;
-    color: #111;
-  }
-}
+body { margin:0; background:var(--bg); color:var(--text); font-family: "Segoe UI", Tahoma, Arial, sans-serif; font-weight:400; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; }
+#app { min-height:100vh; width:100%; background:radial-gradient(ellipse at 10% 0%, light-dark(#ffffff,#262626) 0%, var(--bg) 52%); padding:24px; border-top:7px solid var(--accent); }
+header { display:flex; justify-content:space-between; align-items:center; gap:18px; flex-wrap:wrap; margin-bottom:22px; }
+.brand { display:flex; gap:13px; align-items:center; }
+.logo { width:64px; height:64px; border-radius:8px; background:#fff; border:1px solid var(--line); color:var(--accentText); display:grid; place-items:center; overflow:hidden; box-shadow:4px 4px 0 #171717; flex:0 0 64px; }
+.logo img { display:block; width:100%; height:100%; object-fit:contain; padding:4px; }
+h1 { margin:0; font-size:27px; font-weight:800; letter-spacing:0; line-height:1.5; }
+.sub { color:var(--muted); font-size:14px; font-weight:500; line-height:1.8; margin-top:5px; }
+.actions { display:flex; flex-wrap:wrap; gap:8px; }
+.lang-toggle { background:var(--accent); border-color:var(--accent); color:var(--accentText); font-weight:800; }
+button,.filelabel { border:1px solid var(--line); border-radius:10px; background:var(--surface); color:var(--text); padding:10px 14px; font:inherit; font-size:14px; font-weight:600; line-height:1.6; cursor:pointer; display:inline-flex; align-items:center; gap:7px; }
+button.primary { background:var(--accent); border-color:var(--accent); color:var(--accentText); font-weight:800; box-shadow:0 3px 0 #171717; }
+button:hover,.filelabel:hover { filter:brightness(.97); }
+input,select { background:var(--surface); color:var(--text); border:1px solid var(--line); border-radius:9px; padding:10px 11px; font:inherit; font-size:13px; min-width:0; }
+.stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-bottom:18px; }
+.stat { background:var(--surface); border:1px solid var(--line); border-top:3px solid var(--accent); border-radius:3px 3px 12px 12px; padding:16px; }
+.stat .label { color:var(--muted); font-size:13px; font-weight:600; line-height:1.7; }
+.stat .value { font-size:28px; font-weight:800; line-height:1.4; margin-top:8px; }
+.stat .note { color:var(--muted); font-size:12px; line-height:1.7; margin-top:5px; }
+.panel { background:var(--surface); border:1px solid var(--line); border-radius:15px; overflow:hidden; }
+.toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; padding:14px; border-bottom:1px solid var(--line); }
+.toolbar-left { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.search { width:min(300px,75vw); }
+.smallnote { color:var(--muted); font-size:12px; padding:0 14px 12px; }
+.tablewrap { width:100%; overflow:auto; max-height:58vh; }
+table { border-collapse:separate; border-spacing:0; width:100%; min-width:1200px; font-size:13px; }
+th,td { padding:13px 12px; border-bottom:1px solid var(--line); text-align:right; white-space:nowrap; line-height:1.8; }
+th { background:var(--surface2); color:var(--text); border-bottom:3px solid var(--accent); font-size:13px; font-weight:800; position:sticky; top:0; z-index:1; }
+tbody tr:hover { background:var(--surface2); }
+td.num { font-variant-numeric:tabular-nums; }
+.part { font-weight:700; direction:ltr; text-align:right; display:inline-block; }
+.qty { font-weight:800; color:var(--accent); }
+.need { font-weight:800; }
+.need.high { color:var(--danger); }
+.tag { display:inline-block; padding:4px 7px; border-radius:6px; background:var(--warn); font-size:10px; }
+.rowbtn { padding:6px 9px; font-size:12px; font-weight:600; }
+.empty { text-align:center; padding:40px; color:var(--muted); }
+footer { color:var(--muted); font-size:11px; margin-top:14px; line-height:1.8; }
+.modalback { display:none; position:fixed; inset:0; background:#0008; z-index:5; padding:18px; align-items:center; justify-content:center; }
+.modalback.show { display:flex; }
+.modal { background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:20px; width:min(560px,100%); max-height:90vh; overflow:auto; }
+.modal h2 { font-size:18px; margin:0 0 16px; }
+.formgrid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.field { display:flex; flex-direction:column; gap:6px; }
+.field label { font-size:13px; font-weight:600; line-height:1.7; color:var(--muted); }
+.field input { width:100%; }
+.modalactions { display:flex; justify-content:flex-start; gap:8px; margin-top:18px; }
+.tip { background:var(--surface2); border:1px solid var(--line); border-radius:10px; padding:12px; color:var(--muted); font-size:12px; line-height:1.8; margin-top:12px; }
+@media(max-width:800px) { #app{padding:14px;} h1{font-size:23px;} .sub{font-size:13px;} .stats{grid-template-columns:repeat(2,minmax(0,1fr));} .stat .value{font-size:23px;} .formgrid{grid-template-columns:1fr;} }
+@media print { body,#app { background:#fff !important; color:#111 !important; padding:0 !important; border:0 !important; } header .actions,.toolbar-left,.rowbtn,.smallnote,footer,.modalback { display:none !important; } .stats { grid-template-columns:repeat(4,1fr); } .stat,.panel { background:#fff !important; border:1px solid #bbb; break-inside:avoid; } .tablewrap { overflow:visible; max-height:none; } table { min-width:0; width:100%; font-size:8px; border-collapse:collapse; } th,td { position:static; white-space:normal; padding:4px 3px; border:1px solid #bbb; color:#111 !important; } th { background:#f5d21a !important; } h1 { font-size:20px; } }
 </style>
 </head>
-
 <body>
 <div id="app">
-
 <header>
-  <div class="brand">
-    <button type="button" class="menu-toggle" id="menuToggle"
-            aria-label="فتح القائمة" aria-controls="sideMenu" aria-expanded="false">
-      <span></span><span></span><span></span>
-    </button>
-    <div class="logo">
-      <img src="https://i.postimg.cc/X7cXtbPp/allwht-alkharjyt.jpg"
-           alt="شعار الشركة">
-    </div>
-    <div>
-      <h1>تنظيم الطلبات</h1>
-      <div class="sub">إدارة احتياج قطع الغيار وتخطيط المشتريات</div>
-    </div>
-  </div>
-
+  <div class="brand"><div class="logo"><img src="https://i.postimg.cc/X7cXtbPp/allwht-alkharjyt.jpg" alt="شعار الشركة"></div><div><h1>تنظيم الطلبات</h1><div class="sub">إدارة احتياج قطع الغيار وتخطيط المشتريات</div></div></div>
   <div class="actions">
-    <button type="button" id="languageToggle" aria-label="تغيير اللغة">English</button>
-    <button type="button" id="addBtn" class="primary">
-      ＋ إضافة قطعة
-    </button>
-
-    <label class="filelabel">
-      ⇧ استيراد Excel / CSV
-      <input id="fileInput" type="file" accept=".xlsx,.xls,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" hidden>
-    </label>
-
-    <button type="button" id="exportBtn">⇩ تصدير Excel</button>
-    <button type="button" id="pdfBtn">⇩ تصدير PDF</button>
+    <button type="button" id="langToggle" class="lang-toggle" aria-label="Switch language">English</button>
+    <button type="button" id="addBtn" class="primary" onclick="openModal()">＋ إضافة قطعة</button>
+    <button type="button" id="saveTableBtn">حفظ الجدول كامل</button>
+    <button type="button" id="newOrderBtn">حفظ الحالي وبدء طلب جديد</button>
+    <button type="button" id="clearTableBtn">حذف الجدول الحالي</button>
+    <label class="filelabel">⇧ استيراد Excel / CSV<input id="fileInput" type="file" accept=".xlsx,.xls,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" hidden></label>
+    <button id="exportBtn">⇩ تصدير Excel</button>
+    <button id="pdfBtn">⇩ تصدير PDF</button>
   </div>
 </header>
-
 <section class="stats">
-  <div class="stat">
-    <div class="label">إجمالي القطع</div>
-    <div class="value" id="totalParts">0</div>
-    <div class="note">عدد الأصناف المسجلة</div>
-  </div>
-
-  <div class="stat">
-    <div class="label">قطع تحتاج إلى طلب</div>
-    <div class="value" id="needParts">0</div>
-    <div class="note">حسب التوقع الحالي</div>
-  </div>
-
-  <div class="stat">
-    <div class="label">إجمالي الكمية المقترحة</div>
-    <div class="value" id="totalNeed">0</div>
-    <div class="note">وحدة من قطع الغيار</div>
-  </div>
-
-  <div class="stat">
-    <div class="label">فترة التخطيط</div>
-    <div class="value">9 أشهر</div>
-    <div class="note">3 أشهر شحن + 6 أشهر تغطية</div>
-  </div>
+  <div class="stat"><div class="label">إجمالي القطع</div><div class="value" id="totalParts">0</div><div class="note">عدد الأصناف المسجلة</div></div>
+  <div class="stat"><div class="label">قطع تحتاج إلى طلب</div><div class="value" id="needParts">0</div><div class="note">حسب التوقع الحالي</div></div>
+  <div class="stat"><div class="label">إجمالي الكمية المقترحة</div><div class="value" id="totalNeed">0</div><div class="note">وحدة من قطع الغيار</div></div>
+  <div class="stat"><div class="label">إجمالي المبيعات للسنتين</div><div class="value" id="totalSales">0</div><div class="note">مبيعات 2025 + مبيعات 2026</div></div>
+  <div class="stat"><div class="label">فترة التخطيط</div><div class="value" id="planningTotal">9 أشهر</div><div class="note">مدة الشحن + مدة التغطية</div><div class="toolbar-left" style="margin-top:10px"><label>الشحن <input id="shippingMonths" type="number" min="0" max="36" step="1" value="3" style="width:72px"></label><label>التغطية <input id="coverageMonths" type="number" min="1" max="60" step="1" value="6" style="width:72px"></label></div></div>
 </section>
-
 <section class="panel">
-  <div class="toolbar">
-    <div>
-      <strong>جدول القطع</strong>
-      <div class="sub">إدارة وتحديث بيانات قطع الغيار</div>
-    </div>
-
-    <div class="toolbar-left">
-      <input id="search" class="search"
-             placeholder="ابحث برقم القطعة أو الاسم…">
-
-      <select id="filter">
-        <option value="all">كل القطع</option>
-        <option value="need">تحتاج إلى طلب</option>
-        <option value="safe">لا تحتاج إلى طلب</option>
-      </select>
-    </div>
-  </div>
-
-  <div class="tablewrap">
-    <table>
-      <thead>
-        <tr>
-          <th>الرقم التسلسلي</th>
-          <th>رقم القطعة</th>
-          <th>الرقم البديل</th>
-          <th>اسم القطعة</th>
-          <th>الكمية الحالية</th>
-          <th>الكمية تحت الطلب</th>
-          <th>مبيعات 2025</th>
-          <th>مبيعات 2026</th>
-          <th>الكمية المطلوبة</th>
-          <th>إجراء</th>
-        </tr>
-      </thead>
-      <tbody id="tableBody"></tbody>
-    </table>
-
-    <div id="empty" class="empty" hidden>
-      لا توجد قطع مطابقة للبحث.
-    </div>
-  </div>
-
-  <div class="smallnote">
-    الحساب التقديري يعتمد على المبيعات والمخزون والكمية تحت الطلب،
-    مع التخطيط لتغطية 9 أشهر.
-  </div>
+  <div class="toolbar"><div><strong>جدول القطع</strong><div class="sub">يمكنك حفظ نسخة من الجدول والرجوع إليها لاحقًا</div><div class="toolbar-left" style="margin-top:8px"><select id="savedOrders" aria-label="الطلبات المحفوظة"><option value="">اختر طلبًا محفوظًا</option></select><button type="button" id="loadOrderBtn">استرجاع الطلب</button><button type="button" id="deleteSavedBtn">حذف النسخة المحفوظة</button></div></div><div class="toolbar-left"><input id="search" class="search" placeholder="ابحث برقم القطعة أو الاسم…"><select id="filter"><option value="all">كل القطع</option><option value="need">تحتاج إلى طلب</option><option value="safe">لا تحتاج إلى طلب</option></select></div></div>
+  <div class="tablewrap"><table><thead><tr><th>الرقم التسلسلي</th><th>رقم القطعة</th><th>الرقم البديل</th><th>اسم القطعة</th><th>الكمية الحالية</th><th>الكمية تحت الطلب</th><th>مبيعات 2025</th><th>مبيعات 2026</th><th>إجمالي المبيعات</th><th>الكمية المطلوبة</th><th>إجراء</th></tr></thead><tbody id="tableBody"></tbody></table><div id="empty" class="empty" hidden>لا توجد قطع مطابقة للبحث.</div></div>
+  <div class="smallnote">طريقة الحساب الحالية: متوسط شهري موزون بين 2025 و2026، ثم توقع فترة التخطيط المحددة أعلاه، مطروحًا منه المخزون الحالي والكمية تحت الطلب. يتم تقريب النتيجة إلى الأعلى.</div>
 </section>
-
-<footer>
-  نسخة تجريبية تحفظ البيانات محليًا في المتصفح.
-  يمكن استيراد ملف Excel بصيغتي XLSX وXLS أو CSV. ملف Excel يتطلب اتصالًا بالإنترنت لتحميل مكتبة القراءة.
-</footer>
-
+<footer>تُحفظ البيانات والنسخ داخل هذا المتصفح فقط. احتفظ بنسخة Excel خارجية احتياطية، لأن التخزين المحلي ليس قاعدة بيانات مشتركة بين الأجهزة.</footer>
 </div>
-
-<!-- القائمة الجانبية -->
-<div class="sidebar-overlay" id="sideMenu" aria-hidden="true">
-  <aside class="sidebar" role="dialog" aria-modal="true" aria-label="القائمة الرئيسية">
-    <div class="sidebar-head">
-      <div class="sidebar-title">القائمة الرئيسية</div>
-      <button type="button" class="sidebar-close" id="closeSideMenu" aria-label="إغلاق القائمة">×</button>
-    </div>
-    <button type="button" class="sidebar-link" id="ordersMenuItem">تنظيم الطلبات</button>
-  </aside>
-</div>
-
-<!-- نافذة إضافة أو تعديل قطعة -->
-<div class="modalback" id="modalBack">
-  <div class="modal">
-    <h2 id="modalTitle">إضافة قطعة</h2>
-
-    <form id="partForm">
-      <div class="formgrid">
-
-        <div class="field">
-          <label>رقم القطعة *</label>
-          <input name="part" required>
-        </div>
-
-        <div class="field">
-          <label>الرقم البديل</label>
-          <input name="alt">
-        </div>
-
-        <div class="field">
-          <label>اسم القطعة *</label>
-          <input name="name" required>
-        </div>
-
-        <div class="field">
-          <label>الكمية الحالية</label>
-          <input name="stock" type="number" min="0" step="1" value="0">
-        </div>
-
-        <div class="field">
-          <label>الكمية تحت الطلب</label>
-          <input name="onOrder" type="number" min="0" step="1" value="0">
-        </div>
-
-        <div class="field">
-          <label>مبيعات 2025</label>
-          <input name="sales25" type="number" min="0" step="1" value="0">
-        </div>
-
-        <div class="field">
-          <label>مبيعات 2026 حتى الآن</label>
-          <input name="sales26" type="number" min="0" step="1" value="0">
-        </div>
-
-      </div>
-
-      <div class="tip">
-        أدخل رقم القطعة واسمها والكميات المتوفرة لديك.
-        الكمية المطلوبة تُحسب تلقائيًا.
-      </div>
-
-      <div class="modalactions">
-        <button class="primary" type="submit">حفظ</button>
-        <button type="button" id="cancelBtn">إلغاء</button>
-      </div>
-    </form>
-  </div>
-</div>
-
+<div class="modalback" id="modalBack"><div class="modal"><h2 id="modalTitle">إضافة قطعة</h2><form id="partForm"><div class="formgrid">
+<div class="field"><label>رقم القطعة *</label><input name="part" required></div><div class="field"><label>الرقم البديل</label><input name="alt"></div>
+<div class="field"><label>اسم القطعة *</label><input name="name" required></div><div class="field"><label>الكمية الحالية</label><input name="stock" type="number" min="0" step="1" value="0"></div>
+<div class="field"><label>الكمية تحت الطلب</label><input name="onOrder" type="number" min="0" step="1" value="0"></div><div class="field"><label>مبيعات 2025</label><input name="sales25" type="number" min="0" step="1" value="0"></div>
+<div class="field"><label>مبيعات 2026 حتى الآن</label><input name="sales26" type="number" min="0" step="1" value="0"></div>
+</div><div class="tip">في هذه النسخة، مبيعات 2026 تُعامل كأنها مبيعات 10 أشهر تقريبًا. سنجعل الفترة قابلة للتحديد عندما نعرف شكل ملفك الفعلي.</div><div class="modalactions"><button class="primary" type="submit">حفظ</button><button type="button" id="cancelBtn">إلغاء</button></div></form></div></div>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
-const STORAGE_KEY = "tanzeem-talabat-demo-v2";
-
-const $ = id => document.getElementById(id);
-
-// تبديل واجهة البرنامج بين العربية والإنجليزية
-let currentLanguage = localStorage.getItem("tanzeem-language") || "ar";
-const translations = {
-  "تنظيم الطلبات":"Order Management",
-  "إدارة احتياج قطع الغيار وتخطيط المشتريات":"Spare Parts Needs & Purchasing Plan",
-  "＋ إضافة قطعة":"＋ Add Part",
-  "⇧ استيراد Excel / CSV":"⇧ Import CSV",
-  "⇩ تصدير Excel":"⇩ Export Excel",
-  "⇩ تصدير PDF":"⇩ Export PDF",
-  "إجمالي القطع":"Total Parts",
-  "عدد الأصناف المسجلة":"Number of registered items",
-  "قطع تحتاج إلى طلب":"Parts to Order",
-  "حسب التوقع الحالي":"Based on current forecast",
-  "إجمالي الكمية المقترحة":"Total Suggested Quantity",
-  "وحدة من قطع الغيار":"Spare parts units",
-  "فترة التخطيط":"Planning Period",
-  "9 أشهر":"9 months",
-  "3 أشهر شحن + 6 أشهر تغطية":"3 months shipping + 6 months coverage",
-  "جدول القطع":"Parts Table",
-  "إدارة وتحديث بيانات قطع الغيار":"Manage and update spare parts data",
-  "ابحث برقم القطعة أو الاسم…":"Search by part number or name…",
-  "كل القطع":"All parts",
-  "تحتاج إلى طلب":"Needs ordering",
-  "لا تحتاج إلى طلب":"No order needed",
-  "الرقم التسلسلي":"Serial No.",
-  "رقم القطعة":"Part Number",
-  "الرقم البديل":"Alternative Number",
-  "اسم القطعة":"Part Name",
-  "الكمية الحالية":"Current Stock",
-  "الكمية تحت الطلب":"On Order",
-  "مبيعات 2025":"2025 Sales",
-  "مبيعات 2026":"2026 Sales",
-  "الكمية المطلوبة":"Required Quantity",
-  "إجراء":"Action",
-  "لا توجد قطع مطابقة للبحث.":"No parts match your search.",
-  "الحساب التقديري يعتمد على المبيعات والمخزون والكمية تحت الطلب،\n    مع التخطيط لتغطية 9 أشهر.":"The estimate is based on sales, stock, and items on order,\n    with a 9-month coverage plan.",
-  "نسخة تجريبية تحفظ البيانات محليًا في المتصفح.\n  يمكن استيراد ملف Excel بصيغتي XLSX وXLS أو CSV. ملف Excel يتطلب اتصالًا بالإنترنت لتحميل مكتبة القراءة.":"Demo version; data is saved locally in this browser.\n  Import currently supports CSV.",
-  "القائمة الرئيسية":"Main Menu",
-  "إغلاق القائمة":"Close menu",
-  "فتح القائمة":"Open menu",
-  "إضافة قطعة":"Add Part",
-  "تعديل بيانات القطعة":"Edit Part Details",
-  "الكمية الحالية":"Current Stock",
-  "الكمية تحت الطلب":"On Order",
-  "مبيعات 2026 حتى الآن":"2026 Sales to Date",
-  "أدخل رقم القطعة واسمها والكميات المتوفرة لديك.\n        الكمية المطلوبة تُحسب تلقائيًا.":"Enter the part number, name, and available quantities.\n        Required quantity is calculated automatically.",
-  "حفظ":"Save",
-  "إلغاء":"Cancel",
-  "تعديل":"Edit",
-  "حذف":"Delete"
+const KEY='tanzeem-talabat-demo-v1';
+const ARCHIVE_KEY='tanzeem-talabat-archives-v1';
+const PLAN_KEY='tanzeem-talabat-planning-v1';
+const LANG_KEY='tanzeem-talabat-language-v1';
+let language=localStorage.getItem(LANG_KEY)==='en'?'en':'ar';
+const translations={
+ 'تنظيم الطلبات':'Order Organizer','إدارة احتياج قطع الغيار وتخطيط المشتريات':'Spare Parts Demand & Purchasing Planner','＋ إضافة قطعة':'＋ Add Part','حفظ الجدول كامل':'Save Full Table','حفظ الحالي وبدء طلب جديد':'Save & Start New Order','حذف الجدول الحالي':'Clear Current Table','⇧ استيراد Excel / CSV':'⇧ Import Excel / CSV','⇩ تصدير Excel':'⇩ Export Excel','⇩ تصدير PDF':'⇩ Export PDF',
+ 'إجمالي القطع':'Total Parts','عدد الأصناف المسجلة':'Registered items','قطع تحتاج إلى طلب':'Parts to Order','حسب التوقع الحالي':'Based on current forecast','إجمالي الكمية المقترحة':'Total Suggested Quantity','وحدة من قطع الغيار':'Spare parts units','إجمالي المبيعات للسنتين':'Total Sales for Both Years','مبيعات 2025 + مبيعات 2026':'2025 sales + 2026 sales','فترة التخطيط':'Planning Period','مدة الشحن + مدة التغطية':'Shipping time + coverage','الشحن':'Shipping','التغطية':'Coverage','جدول القطع':'Parts Table','يمكنك حفظ نسخة من الجدول والرجوع إليها لاحقًا':'Save a copy of the table and restore it later','اختر طلبًا محفوظًا':'Select a saved order','استرجاع الطلب':'Restore Order','حذف النسخة المحفوظة':'Delete Saved Copy','ابحث برقم القطعة أو الاسم…':'Search part number or name…','كل القطع':'All Parts','تحتاج إلى طلب':'Needs Order','لا تحتاج إلى طلب':'No Order Needed','الرقم التسلسلي':'No.','رقم القطعة':'Part Number','الرقم البديل':'Alternate Number','اسم القطعة':'Part Name','الكمية الحالية':'Current Stock','الكمية تحت الطلب':'On Order','مبيعات 2025':'2025 Sales','مبيعات 2026':'2026 Sales','إجمالي المبيعات':'Total Sales','الكمية المطلوبة':'Required Qty','إجراء':'Actions','طريقة الحساب الحالية: متوسط شهري موزون بين 2025 و2026، ثم توقع فترة التخطيط المحددة أعلاه، مطروحًا منه المخزون الحالي والكمية تحت الطلب. يتم تقريب النتيجة إلى الأعلى.':'Current formula: weighted monthly average of 2025 and 2026 sales, projected over the selected planning period, minus current stock and on-order quantity. Results are rounded up.','تُحفظ البيانات والنسخ داخل هذا المتصفح فقط. احتفظ بنسخة Excel خارجية احتياطية، لأن التخزين المحلي ليس قاعدة بيانات مشتركة بين الأجهزة.':'Data and saved copies are stored in this browser only. Keep an external Excel backup; local storage is not shared across devices.','إضافة قطعة':'Add Part','تعديل بيانات القطعة':'Edit Part','مبيعات 2026 حتى الآن':'2026 Sales to Date','في هذه النسخة، مبيعات 2026 تُعامل كأنها مبيعات 10 أشهر تقريبًا. سنجعل الفترة قابلة للتحديد عندما نعرف شكل ملفك الفعلي.':'In this version, 2026 sales are treated as approximately 10 months. The period can be made configurable later.','حفظ':'Save','إلغاء':'Cancel','تعديل':'Edit','حذف':'Delete'
 };
-function applyLanguage() {
-  const isEnglish = currentLanguage === "en";
-  document.documentElement.lang = isEnglish ? "en" : "ar";
-  document.documentElement.dir = isEnglish ? "ltr" : "rtl";
-  document.title = isEnglish ? "Order Management" : "تنظيم الطلبات";
-  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-  const nodes = [];
-  while (walker.nextNode()) nodes.push(walker.currentNode);
-  for (const node of nodes) {
-    const original = node.nodeValue;
-    const trimmed = original.trim();
-    if (!trimmed) continue;
-    if (isEnglish && translations[trimmed]) {
-      node.nodeValue = original.replace(trimmed, translations[trimmed]);
-    } else if (!isEnglish) {
-      const reverse = Object.entries(translations).find(([, en]) => en === trimmed)?.[0];
-      if (reverse) node.nodeValue = original.replace(trimmed, reverse);
-    }
-  }
-  const attrs = ["placeholder", "aria-label", "title"];
-  document.querySelectorAll("input,button,aside,img").forEach(el => attrs.forEach(attr => {
-    const val = el.getAttribute(attr);
-    if (!val) return;
-    if (isEnglish && translations[val]) el.setAttribute(attr, translations[val]);
-    else if (!isEnglish) {
-      const reverse = Object.entries(translations).find(([, en]) => en === val)?.[0];
-      if (reverse) el.setAttribute(attr, reverse);
-    }
-  }));
-  const toggle = $("languageToggle");
-  if (toggle) toggle.textContent = isEnglish ? "العربية" : "English";
-  const filter = $("filter");
-  if (filter) {
-    [...filter.options].forEach(option => {
-      const ar = {all:"كل القطع", need:"تحتاج إلى طلب", safe:"لا تحتاج إلى طلب"}[option.value];
-      option.textContent = isEnglish ? translations[ar] : ar;
-    });
-  }
-}
-$("languageToggle").addEventListener("click", () => {
-  currentLanguage = currentLanguage === "ar" ? "en" : "ar";
-  localStorage.setItem("tanzeem-language", currentLanguage);
-  applyLanguage();
-  renderTable();
-});
-
-
-// القائمة الجانبية
-const sideMenu = $("sideMenu");
-const menuToggle = $("menuToggle");
-
-function openSideMenu() {
-  sideMenu.classList.add("open");
-  sideMenu.setAttribute("aria-hidden", "false");
-  menuToggle.setAttribute("aria-expanded", "true");
-  $("closeSideMenu").focus();
-}
-
-function closeSideMenu() {
-  sideMenu.classList.remove("open");
-  sideMenu.setAttribute("aria-hidden", "true");
-  menuToggle.setAttribute("aria-expanded", "false");
-  menuToggle.focus();
-}
-
-menuToggle.addEventListener("click", openSideMenu);
-$("closeSideMenu").addEventListener("click", closeSideMenu);
-sideMenu.addEventListener("click", event => {
-  if (event.target === sideMenu) closeSideMenu();
-});
-$("ordersMenuItem").addEventListener("click", () => {
-  closeSideMenu();
-  window.scrollTo({ top: 0, behavior: "smooth" });
-});
-document.addEventListener("keydown", event => {
-  if (event.key === "Escape" && sideMenu.classList.contains("open")) {
-    closeSideMenu();
-  }
-});
-
-const sampleParts = [
-  {part:"320/A7161",alt:"",name:"LIFT PUMP",stock:4,onOrder:2,sales25:18,sales26:12},
-  {part:"320/A4904",alt:"",name:"WATER PUMP",stock:1,onOrder:0,sales25:6,sales26:8},
-  {part:"320/04186",alt:"",name:"GEAR PUMP",stock:9,onOrder:0,sales25:10,sales26:5},
-  {part:"332/H0887",alt:"",name:"WATER PUMP",stock:0,onOrder:4,sales25:14,sales26:11},
-  {part:"332/F9031",alt:"",name:"HYDRAULIC PUMP",stock:3,onOrder:0,sales25:4,sales26:7},
-  {part:"30/915200",alt:"",name:"RADIATOR",stock:2,onOrder:1,sales25:8,sales26:6},
-  {part:"6N1030",alt:"",name:"OIL PUMP DRIVE",stock:7,onOrder:0,sales25:5,sales26:3}
+function applyLanguage(){const en=language==='en';document.documentElement.lang=en?'en':'ar';document.documentElement.dir=en?'ltr':'rtl';$('langToggle').textContent=en?'العربية':'English';document.querySelectorAll('h1,.sub,.stat .label,.stat .note,.toolbar strong,.smallnote,footer,.field label,.tip,.modalactions button,th,button,.filelabel,select option').forEach(el=>{if(!el.dataset.arText)el.dataset.arText=el.textContent;const original=el.dataset.arText.trim();if(en){const translated=translations[original];if(translated)el.textContent=translated;}else{el.textContent=el.dataset.arText;}});$('search').placeholder=en?'Search part number or name…':'ابحث برقم القطعة أو الاسم…';$('empty').textContent=en?'No matching parts found.':'لا توجد قطع مطابقة للبحث.';document.querySelectorAll('.field input').forEach(i=>{if(i.name==='part')i.placeholder=en?'Part number':'';});render();}
+document.getElementById('langToggle').addEventListener('click',()=>{language=language==='ar'?'en':'ar';try{localStorage.setItem(LANG_KEY,language);}catch(e){}applyLanguage();});
+function translatePlanningLabels(){document.querySelectorAll('.stat .toolbar-left label').forEach(el=>{const node=el.firstChild;if(!node||node.nodeType!==3)return;const current=node.textContent.trim();if(language==='en'){node.textContent=(current==='الشحن'?'Shipping':current==='التغطية'?'Coverage':current)+' ';}else{node.textContent=(current==='Shipping'?'الشحن':current==='Coverage'?'التغطية':current)+' ';}});}
+document.getElementById('langToggle').addEventListener('click',translatePlanningLabels);
+const seed=[
+ {part:'320/A7161',alt:'',name:'LIFT PUMP',stock:4,onOrder:2,sales25:18,sales26:12},
+ {part:'320/A4904',alt:'',name:'WATER PUMP',stock:1,onOrder:0,sales25:6,sales26:8},
+ {part:'320/04186',alt:'',name:'GEAR PUMP',stock:9,onOrder:0,sales25:10,sales26:5},
+ {part:'332/H0887',alt:'',name:'WATER PUMP',stock:0,onOrder:4,sales25:14,sales26:11},
+ {part:'332/F9031',alt:'',name:'HYDRAULIC PUMP',stock:3,onOrder:0,sales25:4,sales26:7},
+ {part:'30/915200',alt:'',name:'RADIATOR',stock:2,onOrder:1,sales25:8,sales26:6},
+ {part:'6N1030',alt:'',name:'OIL PUMP DRIVE',stock:7,onOrder:0,sales25:5,sales26:3}
 ];
-
-let parts = [];
-let editIndex = null;
-
-try {
-  const saved = localStorage.getItem(STORAGE_KEY);
-  parts = saved ? JSON.parse(saved) : sampleParts;
-} catch (error) {
-  parts = sampleParts;
+let parts=[]; let editPart=null; let archives=[];
+try { const saved=localStorage.getItem(KEY); parts=saved?JSON.parse(saved):seed; } catch(e) { parts=seed; }
+try { archives=JSON.parse(localStorage.getItem(ARCHIVE_KEY)||'[]'); if(!Array.isArray(archives)) archives=[]; } catch(e) { archives=[]; }
+const $=id=>document.getElementById(id);
+let shippingMonths=3,coverageMonths=6;
+try { const plan=JSON.parse(localStorage.getItem(PLAN_KEY)||'{}'); shippingMonths=Math.max(0,Number(plan.shippingMonths??3)||0); coverageMonths=Math.max(1,Number(plan.coverageMonths??6)||1); } catch(e) {}
+function planningMonths(){return shippingMonths+coverageMonths;}
+function calc(p){ const m25=Math.max(0,Number(p.sales25)||0)/12; const m26=Math.max(0,Number(p.sales26)||0)/10; const monthly=m25*.4+m26*.6; return Math.max(0,Math.ceil(monthly*planningMonths()-(Number(p.stock)||0)-(Number(p.onOrder)||0))); }
+function save(){try{localStorage.setItem(KEY,JSON.stringify(parts));}catch(e){}}
+function saveArchives(){try{localStorage.setItem(ARCHIVE_KEY,JSON.stringify(archives));}catch(e){alert('تعذر حفظ النسخ؛ قد تكون مساحة التخزين ممتلئة.');}}
+function refreshArchives(){const select=$('savedOrders');const current=select.value;select.innerHTML='<option value="">اختر طلبًا محفوظًا</option>'+archives.map(a=>`<option value="${esc(a.id)}">${esc(a.name)} (${esc(a.date)})</option>`).join('');if(archives.some(a=>a.id===current))select.value=current;}
+function archiveCurrent(name){if(!parts.length){alert('الجدول الحالي فارغ.');return false;}const date=new Date();const label=name||`طلب ${date.toLocaleDateString('ar-SA')} ${date.toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'})}`;archives.unshift({id:String(Date.now()),name:label,date:date.toLocaleDateString('ar-SA'),parts:JSON.parse(JSON.stringify(parts)),shippingMonths,coverageMonths});saveArchives();refreshArchives();return true;}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function render(){const q=$('search').value.trim().toLowerCase(), filter=$('filter').value; let shown=parts.map((p,i)=>({...p,_i:i,_need:calc(p)})).filter(p=>{const match=[p.part,p.alt,p.name].some(v=>String(v||'').toLowerCase().includes(q)); return match&&(filter==='all'||(filter==='need'?p._need>0:p._need===0));});
+ $('tableBody').innerHTML=shown.map(p=>`<tr><td class="num">${p._i+1}</td><td><span class="part">${esc(p.part)}</span></td><td>${esc(p.alt||'—')}</td><td>${esc(p.name)}</td><td class="num">${Number(p.stock)||0}</td><td class="num">${Number(p.onOrder)||0}</td><td class="num">${Number(p.sales25)||0}</td><td class="num">${Number(p.sales26)||0}</td><td class="num">${(Number(p.sales25)||0)+(Number(p.sales26)||0)}</td><td class="need ${p._need>0?'high':''}">${p._need>0?p._need:'—'}</td><td><button class="rowbtn" data-edit="${p._i}">تعديل</button> <button class="rowbtn" data-delete="${p._i}">حذف</button></td></tr>`).join('');
+ $('empty').hidden=shown.length>0; $('totalParts').textContent=parts.length; $('needParts').textContent=parts.filter(p=>calc(p)>0).length; $('totalNeed').textContent=parts.reduce((s,p)=>s+calc(p),0).toLocaleString('en-US'); $('totalSales').textContent=parts.reduce((s,p)=>s+(Number(p.sales25)||0)+(Number(p.sales26)||0),0).toLocaleString('en-US'); $('planningTotal').textContent=planningMonths()+' أشهر';
 }
-
-function saveData() {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(parts));
-  } catch (error) {
-    console.warn("تعذر حفظ البيانات في المتصفح", error);
-  }
-}
-
-function requiredQuantity(p) {
-  const monthly2025 = Math.max(0, Number(p.sales25) || 0) / 12;
-  const monthly2026 = Math.max(0, Number(p.sales26) || 0) / 10;
-
-  const monthlyAverage = monthly2025 * 0.4 + monthly2026 * 0.6;
-
-  return Math.max(
-    0,
-    Math.ceil(
-      monthlyAverage * 9 -
-      (Number(p.stock) || 0) -
-      (Number(p.onOrder) || 0)
-    )
-  );
-}
-
-function escapeHTML(value) {
-  return String(value ?? "").replace(/[&<>"']/g, char => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#39;"
-  }[char]));
-}
-
-function renderTable() {
-  const query = $("search").value.trim().toLowerCase();
-  const filter = $("filter").value;
-
-  const visible = parts
-    .map((p, index) => ({
-      ...p,
-      index,
-      required: requiredQuantity(p)
-    }))
-    .filter(p => {
-      const matchesSearch = [p.part, p.alt, p.name]
-        .some(v => String(v || "").toLowerCase().includes(query));
-
-      const matchesFilter =
-        filter === "all" ||
-        (filter === "need" && p.required > 0) ||
-        (filter === "safe" && p.required === 0);
-
-      return matchesSearch && matchesFilter;
-    });
-
-  $("tableBody").innerHTML = visible.map(p => `
-    <tr>
-      <td>${p.index + 1}</td>
-      <td><span class="part">${escapeHTML(p.part)}</span></td>
-      <td>${escapeHTML(p.alt || "—")}</td>
-      <td>${escapeHTML(p.name)}</td>
-      <td>${Number(p.stock) || 0}</td>
-      <td>${Number(p.onOrder) || 0}</td>
-      <td>${Number(p.sales25) || 0}</td>
-      <td>${Number(p.sales26) || 0}</td>
-      <td class="${p.required > 0 ? "need" : ""}">
-        ${p.required > 0 ? p.required : "—"}
-      </td>
-      <td>
-        <button type="button" class="rowbtn"
-                data-action="edit" data-index="${p.index}">
-          تعديل
-        </button>
-        <button type="button" class="rowbtn"
-                data-action="delete" data-index="${p.index}">
-          حذف
-        </button>
-      </td>
-    </tr>
-  `).join("");
-
-  $("empty").hidden = visible.length !== 0;
-
-  $("totalParts").textContent = parts.length;
-  $("needParts").textContent =
-    parts.filter(p => requiredQuantity(p) > 0).length;
-
-  $("totalNeed").textContent = parts
-    .reduce((sum, p) => sum + requiredQuantity(p), 0)
-    .toLocaleString("en-US");
-  applyLanguage();
-}
-
-/* فتح نافذة الإضافة والتعديل */
-function openModal(index = null) {
-  editIndex = index;
-  $("partForm").reset();
-
-  $("modalTitle").textContent =
-    index === null ? "إضافة قطعة" : "تعديل بيانات القطعة";
-
-  if (index !== null) {
-    const p = parts[index];
-
-    for (const key of [
-      "part", "alt", "name", "stock",
-      "onOrder", "sales25", "sales26"
-    ]) {
-      $("partForm").elements[key].value = p[key] ?? "";
-    }
-  }
-
-  $("modalBack").classList.add("show");
-
-  const firstInput = $("partForm").elements["part"];
-  if (firstInput) firstInput.focus();
-}
-
-function closeModal() {
-  $("modalBack").classList.remove("show");
-  editIndex = null;
-}
-
-/* إصلاح زر إضافة قطعة */
-$("addBtn").addEventListener("click", function () {
-  openModal();
-});
-
-$("cancelBtn").addEventListener("click", closeModal);
-
-$("modalBack").addEventListener("click", function (event) {
-  if (event.target === $("modalBack")) closeModal();
-});
-
-/* حفظ القطعة الجديدة أو التعديلات */
-$("partForm").addEventListener("submit", function (event) {
-  event.preventDefault();
-
-  const form = new FormData(event.currentTarget);
-
-  const partNumber = String(form.get("part") || "").trim();
-  const partName = String(form.get("name") || "").trim();
-
-  if (!partNumber || !partName) {
-    alert("يرجى إدخال رقم القطعة واسمها.");
-    return;
-  }
-
-  const item = {
-    part: partNumber,
-    alt: String(form.get("alt") || "").trim(),
-    name: partName,
-    stock: Math.max(0, Number(form.get("stock")) || 0),
-    onOrder: Math.max(0, Number(form.get("onOrder")) || 0),
-    sales25: Math.max(0, Number(form.get("sales25")) || 0),
-    sales26: Math.max(0, Number(form.get("sales26")) || 0)
-  };
-
-  const duplicateIndex = parts.findIndex((p, index) =>
-    p.part.toLowerCase() === partNumber.toLowerCase() &&
-    index !== editIndex
-  );
-
-  if (duplicateIndex !== -1) {
-    alert("رقم القطعة موجود بالفعل. افتح القطعة الموجودة لتعديلها.");
-    return;
-  }
-
-  if (editIndex === null) {
-    parts.push(item);
-  } else {
-    parts[editIndex] = item;
-  }
-
-  saveData();
-  renderTable();
-  closeModal();
-});
-
-/* تعديل وحذف */
-$("tableBody").addEventListener("click", function (event) {
-  const button = event.target.closest("button[data-action]");
-  if (!button) return;
-
-  const index = Number(button.dataset.index);
-  const action = button.dataset.action;
-  const item = parts[index];
-
-  if (!item) return;
-
-  if (action === "edit") {
-    openModal(index);
-  }
-
-  if (action === "delete") {
-    const confirmed = confirm(
-      "هل تريد حذف هذه القطعة؟\n\n" +
-      "رقم القطعة: " + item.part + "\n" +
-      "اسم القطعة: " + item.name
-    );
-
-    if (confirmed) {
-      parts.splice(index, 1);
-      saveData();
-      renderTable();
-    }
-  }
-});
-
-$("search").addEventListener("input", renderTable);
-$("filter").addEventListener("change", renderTable);
-
-/* استيراد CSV */
-function parseCSV(text) {
-  const rows = [];
-  let row = [];
-  let cell = "";
-  let quoted = false;
-
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i];
-    const next = text[i + 1];
-
-    if (c === '"' && quoted && next === '"') {
-      cell += '"';
-      i++;
-    } else if (c === '"') {
-      quoted = !quoted;
-    } else if ((c === "," || c === ";" || c === "\t") && !quoted) {
-      row.push(cell.trim());
-      cell = "";
-    } else if ((c === "\n" || c === "\r") && !quoted) {
-      if (c === "\r" && next === "\n") i++;
-      row.push(cell.trim());
-      if (row.some(v => v !== "")) rows.push(row);
-      row = [];
-      cell = "";
-    } else {
-      cell += c;
-    }
-  }
-
-  row.push(cell.trim());
-  if (row.some(v => v !== "")) rows.push(row);
-
-  return rows;
-}
-
-function normalizeHeader(value) {
-  return String(value || "")
-    .trim()
-    .toLowerCase()
-    .replace(/[\s_\-]+/g, "");
-}
-
-function cleanPartNumber(value) {
-  if (value === null || value === undefined) return "";
-  if (typeof value === "number" && Number.isFinite(value)) return String(Math.trunc(value));
-  return String(value).trim();
-}
-function numericValue(value) {
-  if (value === null || value === undefined || value === "") return 0;
-  const n = Number(String(value).replace(/[,\s]/g, ""));
-  return Number.isFinite(n) ? n : 0;
-}
-function findHeaderRow(rows, requiredNames) {
-  return rows.findIndex(row => {
-    const cells = row.map(normalizeHeader);
-    return requiredNames.every(name => cells.some(cell => cell.includes(normalizeHeader(name))));
-  });
-}
-function rowsFromSheet(sheet) {
-  return XLSX.utils.sheet_to_json(sheet, {header: 1, defval: "", raw: false});
-}
-function importWorkbook(workbook) {
-  const sealsName = workbook.SheetNames.find(n => normalizeHeader(n) === "seals");
-  const orderName = workbook.SheetNames.find(n => normalizeHeader(n) === "onorder");
-  if (!sealsName || !orderName) throw new Error("يجب أن يحتوي ملف Excel على ورقتي SEALS وON ORDER.");
-
-  const sealsRows = rowsFromSheet(workbook.Sheets[sealsName]);
-  const sealsHeaderIndex = findHeaderRow(sealsRows, ["Part Number", "Name", "Available QTY to Sale"]);
-  if (sealsHeaderIndex < 0) throw new Error("لم أجد عناوين الأعمدة المطلوبة في ورقة SEALS.");
-  const sh = sealsRows[sealsHeaderIndex].map(normalizeHeader);
-  const col = names => sh.findIndex(h => names.some(n => h.includes(normalizeHeader(n))));
-  const si = {
-    part: col(["Part Number"]), name: col(["Name"]), stock: col(["Available QTY to Sale"]),
-    sales26: col(["Total Sales-Return (2026)"]), sales25: col(["Total Sales-Return (2025)"])
-  };
-  if (si.part < 0 || si.name < 0) throw new Error("تعذر تحديد رقم القطعة أو الاسم في ورقة SEALS.");
-
-  const orderRows = rowsFromSheet(workbook.Sheets[orderName]);
-  const orderHeaderIndex = findHeaderRow(orderRows, ["Item number2", "Description", "Quantity"]);
-  if (orderHeaderIndex < 0) throw new Error("لم أجد عناوين الأعمدة المطلوبة في ورقة ON ORDER.");
-  const oh = orderRows[orderHeaderIndex].map(normalizeHeader);
-  const oi = {
-    part: oh.findIndex(h => h.includes(normalizeHeader("Item number2"))),
-    name: oh.findIndex(h => h.includes(normalizeHeader("Description"))),
-    qty: oh.findIndex(h => h === normalizeHeader("Quantity") || h.includes(normalizeHeader("Quantity")))
-  };
-  if (oi.part < 0 || oi.qty < 0) throw new Error("تعذر تحديد رقم القطعة أو الكمية في ورقة ON ORDER.");
-
-  const orderMap = new Map();
-  for (const row of orderRows.slice(orderHeaderIndex + 1)) {
-    const part = cleanPartNumber(row[oi.part]);
-    if (!part) continue;
-    const key = part.toLowerCase();
-    const old = orderMap.get(key) || {qty: 0, name: "", part};
-    old.qty += numericValue(row[oi.qty]);
-    if (!old.name && oi.name >= 0) old.name = String(row[oi.name] || "").trim();
-    orderMap.set(key, old);
-  }
-
-  const imported = new Map();
-  for (const row of sealsRows.slice(sealsHeaderIndex + 1)) {
-    const part = cleanPartNumber(row[si.part]);
-    if (!part) continue;
-    const key = part.toLowerCase();
-    const ordered = orderMap.get(key);
-    imported.set(key, {
-      part, alt: "", name: String(row[si.name] || ordered?.name || "غير محدد").trim(),
-      stock: numericValue(row[si.stock]), onOrder: ordered?.qty || 0,
-      sales25: numericValue(row[si.sales25]), sales26: numericValue(row[si.sales26])
-    });
-  }
-  for (const [key, ordered] of orderMap) {
-    if (!imported.has(key)) imported.set(key, {
-      part: ordered.part || key, alt: "", name: ordered.name || "غير محدد", stock: 0,
-      onOrder: ordered.qty, sales25: 0, sales26: 0
-    });
-  }
-
-  const previousByPart = new Map(parts.map(p => [String(p.part).toLowerCase(), p]));
-  let updated = 0, added = 0;
-  const result = [];
-  for (const [key, item] of imported) {
-    const previous = previousByPart.get(key);
-    if (previous) {
-      // Preserve the alternate number entered manually; source workbook has no alternate-number column.
-      item.alt = previous.alt || "";
-      updated++;
-    } else added++;
-    result.push(item);
-  }
-  parts = result;
-  saveData();
-  renderTable();
-  alert("تم استيراد ملف Excel بنجاح.\nعدد الأصناف: " + parts.length +
-    "\nتمت مطابقة " + updated + " قطعة مع البيانات السابقة.\nأضيفت " + added + " قطعة جديدة.\n\nتم جمع الكميات المتكررة في ورقة ON ORDER حسب رقم القطعة.");
-}
-
-$("fileInput").addEventListener("change", async function (event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  try {
-    const isExcel = /\.(xlsx|xls)$/i.test(file.name);
-    if (isExcel) {
-      if (typeof XLSX === "undefined") throw new Error("تعذر تحميل قارئ Excel. تأكد من اتصال الإنترنت ثم أعد المحاولة.");
-      const workbook = XLSX.read(await file.arrayBuffer(), {type: "array", cellDates: false});
-      importWorkbook(workbook);
-    } else {
-      const rows = parseCSV(await file.text());
-      if (rows.length < 2) throw new Error("ملف CSV لا يحتوي على بيانات كافية.");
-      const headerIndex = rows.findIndex(row => row.some(cell => /part\s*number|رقم\s*القطعة/i.test(String(cell))));
-      const headers = rows[Math.max(0, headerIndex)].map(normalizeHeader);
-      const findColumn = names => headers.findIndex(header => names.some(name => header.includes(normalizeHeader(name))));
-      const columns = {
-        part: findColumn(["رقم القطعة", "partnumber", "partno", "part"]),
-        alt: findColumn(["الرقم البديل", "alternatenumber", "alternate"]),
-        name: findColumn(["اسم القطعة", "description", "partname", "name"]),
-        stock: findColumn(["الكمية الحالية", "stock", "onhand"]),
-        onOrder: findColumn(["الكمية تحت الطلب", "onorder", "ordered"]),
-        sales25: findColumn(["مبيعات 2025", "sales2025", "2025sales"]),
-        sales26: findColumn(["مبيعات 2026", "sales2026", "2026sales"])
-      };
-      if (columns.part < 0) throw new Error("لم أجد عمود رقم القطعة في ملف CSV.");
-      let updated = 0, added = 0;
-      for (const row of rows.slice(Math.max(0, headerIndex) + 1)) {
-        const partNumber = cleanPartNumber(row[columns.part]);
-        if (!partNumber) continue;
-        const i = parts.findIndex(p => String(p.part).toLowerCase() === partNumber.toLowerCase());
-        const previous = i >= 0 ? parts[i] : {};
-        const readValue = key => columns[key] < 0 || row[columns[key]] === undefined || row[columns[key]] === "" ? (previous[key] ?? 0) : numericValue(row[columns[key]]);
-        const item = {part: partNumber, alt: columns.alt >= 0 ? row[columns.alt] || previous.alt || "" : previous.alt || "", name: columns.name >= 0 ? row[columns.name] || previous.name || "غير محدد" : previous.name || "غير محدد", stock: readValue("stock"), onOrder: readValue("onOrder"), sales25: readValue("sales25"), sales26: readValue("sales26")};
-        if (i >= 0) { parts[i] = item; updated++; } else { parts.push(item); added++; }
-      }
-      saveData(); renderTable();
-      alert("تم الاستيراد بنجاح.\nتم تحديث " + updated + " قطعة وإضافة " + added + " قطعة جديدة.");
-    }
-  } catch (error) {
-    alert("تعذر الاستيراد: " + error.message);
-  } finally { event.target.value = ""; }
-});
-
-/* تصدير جدول يفتح في Excel */
-$("exportBtn").addEventListener("click", function () {
-  const headers = [
-    "الرقم التسلسلي", "رقم القطعة", "الرقم البديل",
-    "اسم القطعة", "الكمية الحالية", "الكمية تحت الطلب",
-    "مبيعات 2025", "مبيعات 2026", "الكمية المطلوبة"
-  ];
-
-  const rows = parts.map((p, index) => [
-    index + 1, p.part, p.alt, p.name, p.stock,
-    p.onOrder, p.sales25, p.sales26, requiredQuantity(p)
-  ]);
-
-  const escapeCell = value => String(value ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-
-  const html =
-    '<html><head><meta charset="UTF-8"></head><body>' +
-    '<table dir="rtl" border="1"><thead><tr>' +
-    headers.map(h => "<th>" + escapeCell(h) + "</th>").join("") +
-    "</tr></thead><tbody>" +
-    rows.map(row => "<tr>" +
-      row.map(value => "<td>" + escapeCell(value) + "</td>").join("") +
-      "</tr>").join("") +
-    "</tbody></table></body></html>";
-
-  const blob = new Blob(["\uFEFF", html], {
-    type: "application/vnd.ms-excel;charset=utf-8;"
-  });
-
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-
-  link.href = url;
-  link.download = "تنظيم-الطلبات.xls";
-  link.click();
-
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-});
-
-/* الطباعة أو الحفظ PDF */
-$("pdfBtn").addEventListener("click", function () {
-  window.print();
-});
-
-renderTable();
-applyLanguage();
+function updatePlanning(){shippingMonths=Math.min(36,Math.max(0,Math.floor(Number($('shippingMonths').value)||0)));coverageMonths=Math.min(60,Math.max(1,Math.floor(Number($('coverageMonths').value)||1)));$('shippingMonths').value=shippingMonths;$('coverageMonths').value=coverageMonths;try{localStorage.setItem(PLAN_KEY,JSON.stringify({shippingMonths,coverageMonths}));}catch(e){}render();}
+$('shippingMonths').value=shippingMonths;$('coverageMonths').value=coverageMonths;$('shippingMonths').addEventListener('change',updatePlanning);$('coverageMonths').addEventListener('change',updatePlanning);
+$('saveTableBtn').addEventListener('click',()=>{const name=prompt('اكتب اسمًا لهذه النسخة حتى تتمكن من الرجوع إليها لاحقًا:','طلب '+new Date().toLocaleDateString('ar-SA'));if(name===null)return;if(archiveCurrent(name.trim()||undefined))alert('تم حفظ نسخة كاملة من الجدول. يمكنك استرجاعها من قائمة الطلبات المحفوظة.');});
+$('newOrderBtn').addEventListener('click',()=>{if(!confirm('سيتم حفظ الجدول الحالي كنسخة يمكن استرجاعها لاحقًا، ثم تفريغ الجدول الحالي لبدء طلب جديد. هل تريد المتابعة؟'))return;if(!archiveCurrent())return;parts=[];save();render();alert('تم حفظ الطلب السابق وبدء جدول جديد. يمكنك استرجاع الطلب السابق من قائمة الطلبات المحفوظة.');});
+$('clearTableBtn').addEventListener('click',()=>{if(!parts.length){alert('الجدول فارغ بالفعل.');return;}if(!confirm('تحذير: سيتم حذف جميع القطع من الجدول الحالي نهائيًا. لن تُحذف النسخ المحفوظة. هل تريد المتابعة؟'))return;parts=[];save();render();alert('تم حذف جميع القطع من الجدول الحالي.');});
+$('loadOrderBtn').addEventListener('click',()=>{const a=archives.find(x=>x.id===$('savedOrders').value);if(!a){alert('اختر نسخة محفوظة أولًا.');return;}if(!confirm('سيتم استبدال الجدول الحالي ببيانات النسخة المحفوظة. احفظ الجدول الحالي أولًا إن كنت تريد الاحتفاظ به.'))return;parts=JSON.parse(JSON.stringify(a.parts));shippingMonths=Number(a.shippingMonths??3);coverageMonths=Number(a.coverageMonths??6);$('shippingMonths').value=shippingMonths;$('coverageMonths').value=coverageMonths;try{localStorage.setItem(PLAN_KEY,JSON.stringify({shippingMonths,coverageMonths}));}catch(e){}save();render();alert('تم استرجاع النسخة المحفوظة.');});
+$('deleteSavedBtn').addEventListener('click',()=>{const id=$('savedOrders').value;if(!id){alert('اختر نسخة محفوظة أولًا.');return;}const a=archives.find(x=>x.id===id);if(!a||!confirm('حذف النسخة المحفوظة «'+a.name+'» نهائيًا؟'))return;archives=archives.filter(x=>x.id!==id);saveArchives();refreshArchives();});
+function openModal(i=null){editPart=i; $('partForm').reset(); $('modalTitle').textContent=i===null?'إضافة قطعة':'تعديل بيانات القطعة'; if(i!==null){const p=parts[i]; for(const k of ['part','alt','name','stock','onOrder','sales25','sales26']) $('partForm').elements[k].value=p[k]??'';} $('modalBack').classList.add('show');}
+function closeModal(){$('modalBack').classList.remove('show');}
+$('addBtn').addEventListener('click',()=>openModal()); $('cancelBtn').addEventListener('click',closeModal); $('modalBack').addEventListener('click',e=>{if(e.target===$('modalBack'))closeModal();});
+$('partForm').addEventListener('submit',e=>{e.preventDefault();const f=new FormData(e.target);const p={part:f.get('part').trim(),alt:f.get('alt').trim(),name:f.get('name').trim(),stock:+f.get('stock')||0,onOrder:+f.get('onOrder')||0,sales25:+f.get('sales25')||0,sales26:+f.get('sales26')||0};const duplicate=parts.findIndex((x,j)=>x.part.toLowerCase()===p.part.toLowerCase()&&j!==editPart);if(duplicate>=0){alert('رقم القطعة موجود بالفعل. عدّل القطعة الموجودة بدل تكرارها.');return;}if(editPart===null)parts.push(p);else parts[editPart]=p;save();render();closeModal();});
+$('tableBody').addEventListener('click',e=>{const ed=e.target.closest('[data-edit]'),del=e.target.closest('[data-delete]');if(ed)openModal(+ed.dataset.edit);if(del){const i=+del.dataset.delete;const p=parts[i];if(p&&confirm(`تأكيد حذف القطعة؟\n\nرقم القطعة: ${p.part}\nاسم القطعة: ${p.name}\n\nلا يمكن التراجع عن هذا الحذف.`)){parts.splice(i,1);save();render();}}});
+$('search').addEventListener('input',render);$('filter').addEventListener('change',render);
+function parseCSV(text){const rows=[];let row=[],cell='',quoted=false;for(let i=0;i<text.length;i++){const c=text[i],n=text[i+1];if(c==='"'&&quoted&&n==='"'){cell+='"';i++;}else if(c==='"'){quoted=!quoted;}else if((c===','||c===';'||c==='\t')&&!quoted){row.push(cell.trim());cell='';}else if((c==='\n'||c==='\r')&&!quoted){if(c==='\r'&&n==='\n')i++;row.push(cell.trim());if(row.some(x=>x!==''))rows.push(row);row=[];cell='';}else cell+=c;}row.push(cell.trim());if(row.some(x=>x!==''))rows.push(row);return rows;}
+function norm(s){return String(s||'').trim().toLowerCase().replace(/[\s_\-]+/g,'');}
+$('fileInput').addEventListener('change',async e=>{const file=e.target.files[0];if(!file)return;try{let rows;if(/\.csv$/i.test(file.name)){rows=parseCSV(await file.text());}else{if(!window.XLSX)throw new Error('تعذر تحميل مكتبة Excel. تأكد من الاتصال بالإنترنت ثم أعد المحاولة.');const data=await file.arrayBuffer();const workbook=XLSX.read(data,{type:'array'});const preferred=workbook.SheetNames.find(n=>norm(n)==='seals')||workbook.SheetNames[0];rows=XLSX.utils.sheet_to_json(workbook.Sheets[preferred],{header:1,raw:false,defval:''});}if(rows.length<2)throw new Error('الملف فارغ أو لا يحتوي على صفوف بيانات.');const headers=rows[0].map(norm);const find=names=>headers.findIndex(h=>names.some(n=>h.includes(norm(n))));const ix={part:find(['رقمالقطعة','partnumber','partno','itemnumber','itemnumber2','part']),alt:find(['الرقمالبديل','alternatenumber','alternate']),name:find(['اسمالقطعة','description','partname','name']),stock:find(['الكميةالحالية','availableqtytosale','stock','onhand']),onOrder:find(['الكميةتحتالطلب','quantity','onorder','ordered']),sales25:find(['مبيعات2025','sales2025','2025sales']),sales26:find(['مبيعات2026','sales2026','2026sales'])};if(ix.part<0)throw new Error('لم أجد عمود رقم القطعة. استخدم عنوانًا مثل Part Number أو Item number2.');let updated=0,added=0;for(const r of rows.slice(1)){const part=String(r[ix.part]||'').trim();if(!part)continue;const get=(k,old=0)=>ix[k]>=0&&r[ix[k]]!==undefined&&r[ix[k]]!==''?(Number(String(r[ix[k]]).replace(/,/g,''))||0):old;const i=parts.findIndex(p=>p.part.toLowerCase()===part.toLowerCase());if(i>=0){const old=parts[i];parts[i]={...old,alt:ix.alt>=0?(r[ix.alt]||old.alt):old.alt,name:ix.name>=0?(r[ix.name]||old.name):old.name,stock:get('stock',old.stock),onOrder:get('onOrder',old.onOrder),sales25:get('sales25',old.sales25),sales26:get('sales26',old.sales26)};updated++;}else{parts.push({part,alt:ix.alt>=0?r[ix.alt]||'':'',name:ix.name>=0?r[ix.name]||'غير محدد':'غير محدد',stock:get('stock'),onOrder:get('onOrder'),sales25:get('sales25'),sales26:get('sales26')});added++;}}save();render();alert(`تم الاستيراد بنجاح من ورقة ${/\.csv$/i.test(file.name)?'CSV':preferred}.\nتم تحديث ${updated} قطعة وإضافة ${added} قطعة جديدة.\nتنبيه: ورقة ON ORDER تُقرأ كطلب مستقل، ويلزم دمجها منفصلًا إذا أردت احتساب الكمية تحت الطلب بدقة.`);}catch(err){alert('تعذر استيراد الملف: '+err.message);}finally{e.target.value='';}});
+ $('exportBtn').addEventListener('click',()=>{const headers=['الرقم التسلسلي','رقم القطعة','الرقم البديل','اسم القطعة','الكمية الحالية','الكمية تحت الطلب','مبيعات 2025','مبيعات 2026','إجمالي المبيعات للسنتين','الكمية المطلوبة'];const rows=parts.map((p,i)=>[i+1,p.part,p.alt,p.name,p.stock,p.onOrder,p.sales25,p.sales26,(Number(p.sales25)||0)+(Number(p.sales26)||0),calc(p)]);const escX=v=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');const html='<html><head><meta charset="UTF-8"></head><body><table dir="rtl" border="1"><thead><tr>'+headers.map(h=>'<th>'+escX(h)+'</th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+r.map(v=>'<td>'+escX(v)+'</td>').join('')+'</tr>').join('')+'</tbody></table></body></html>';const blob=new Blob(['\uFEFF',html],{type:'application/vnd.ms-excel;charset=utf-8;'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='تنظيم-الطلبات.xls';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);});
+$('pdfBtn').addEventListener('click',()=>{window.print();});
+refreshArchives();applyLanguage();translatePlanningLabels();render();
 </script>
 </body>
 </html>
