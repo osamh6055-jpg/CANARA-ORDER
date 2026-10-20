@@ -191,6 +191,8 @@ footer{color:#858782;font-size:12px;padding:6px 2px 28px}
 .menu-row button{flex:1;min-height:34px;padding:7px 8px!important;font-size:12px}
 .menu-apply{background:#171717!important;color:#fff!important}
 .menu-clear{background:#fff!important;color:#333!important;border:1px solid #ddd!important}
+.review-alt-empty{background:#fff!important}
+tr.needs-review input[data-k="reviewAlt"]{border-color:#d97757;background:#fff8f4;font-weight:700}
 
 </style>
 </head>
@@ -242,6 +244,7 @@ const cols=[
  {key:'currentPartNo',label:'رقم قطعة الكمية الحالية',type:'text',wide:false},
  {key:'current',label:'الكمية الحالية',type:'number'},
  {key:'orderPartNo',label:'رقم القطعة تحت الطلب',type:'text',wide:false},
+ {key:'reviewAlt',label:'الرقم البديل للمراجعة',type:'text',wide:false},
  {key:'onorder',label:'الكمية تحت الطلب',type:'number'},
  {key:'sales25',label:'مبيعات 2025',type:'number'},
  {key:'sales26',label:'مبيعات 2026',type:'number'},
@@ -345,7 +348,9 @@ function render(){
  $('tbody').innerHTML=visible.map(({r,i},displayIndex)=>`<tr class="${r._needsReview && String(r.orderPartNo??'').trim()!==''?'needs-review':''}" title="${r._needsReview && String(r.orderPartNo??'').trim()!==''?'رقم غير مطابق — يحتاج مراجعة يدوية':''}"><td>${displayIndex+1}</td>${cols.filter(c=>(c.key!=='orderPartNo'||showOrderPartNo)&&(c.key!=='currentPartNo'||showCurrentPartNo)).map(c=>{
   let v=val(r,c.key);
   if(c.calc)return `<td class="calculated ${c.key==='required'&&v>0?'needed':''}">${Number(v).toLocaleString('en-US')}</td>`;
-  return `<td><input data-i="${i}" data-k="${c.key}" class="${c.wide?'wide':''}" type="${c.type==='number'?'number':'text'}" ${c.type==='number'?'min="0" step="any"':''} value="${esc(v)}" aria-label="${c.label}"></td>`;
+  // The alternative-number field is editable only on red unmatched review rows.
+  if(c.key==='reviewAlt' && !r._needsReview) return '<td class="review-alt-empty"></td>';
+  return `<td><input data-i="${i}" data-k="${c.key}" class="${c.wide?'wide':''}" type="${c.type==='number'?'number':'text'}" ${c.type==='number'?'min="0" step="any"':''} value="${esc(v)}" aria-label="${c.label}" ${c.key==='reviewAlt'?'placeholder="أدخل الرقم البديل" title="أدخل الرقم المطابق في جدول القطع لنقل الكمية"':''}></td>`;
  }).join('')}</tr>`).join('');
  $('rowBadge').textContent=rows.length.toLocaleString('en-US')+' صف';
  $('statRows').textContent=rows.filter(r=>Object.values(r).some(v=>String(v??'').trim()!=='')).length.toLocaleString('en-US');
@@ -358,6 +363,33 @@ function render(){
   inp.addEventListener('change',()=>{
    const rowIndex=+inp.dataset.i, row=rows[rowIndex], key=inp.dataset.k;
    row[key]=inp.value;
+   // New explicit workflow: enter the known alternate part number in the red row's
+   // dedicated reviewAlt column. Transfer its order quantity only after a target row
+   // is found by exact normalized part/alternate match.
+   if(row._needsReview && key==='reviewAlt'){
+    const alternate=normalizePart(row.reviewAlt);
+    if(!alternate){save();render();return;}
+    let target=null;
+    // Prefer an exact main part number, then a matching alternate number.
+    target=rows.find(candidate=>candidate!==row && !candidate._needsReview && normalizePart(candidate.part)===alternate) ||
+           rows.find(candidate=>candidate!==row && !candidate._needsReview && normalizePart(candidate.alt)===alternate) || null;
+    if(target){
+      const qtyToMove=num(row.onorder);
+      const targetBefore=num(target.onorder);
+      const finalQty=targetBefore+qtyToMove;
+      target.onorder=String(finalQty);
+      target.orderPartNo=target.part || target.orderPartNo || row.orderPartNo || '';
+      const sourceIndex=rows.indexOf(row);
+      if(sourceIndex>=0) rows.splice(sourceIndex,1);
+      if(!rows.some(r=>r._needsReview) && columnFilters.orderPartNo?.mode==='review') delete columnFilters.orderPartNo;
+      save();render();
+      alert(`تمت المطابقة باستخدام الرقم البديل ${row.reviewAlt}، ونُقلت الكمية تحت الطلب مع الرقم. الكمية المنقولة: ${qtyToMove}، الكمية السابقة: ${targetBefore}، الإجمالي الجديد: ${finalQty}.`);
+      return;
+    }
+    save();render();
+    alert(`لم أجد الرقم البديل «${row.reviewAlt}» في عمود «رقم القطعة» أو «الرقم البديل» في الصفوف الأساسية. بقي الصف الأحمر وكميته كما هما.`);
+    return;
+   }
    // Resolve unmatched red review rows automatically in either workflow:
    // (1) user adds the unmatched value as an alternate on a real row, or
    // (2) user edits the red row's order part number to the correct part/alternate.
@@ -378,43 +410,41 @@ function render(){
     }
    }
    if(row._needsReview && ['orderPartNo','part','alt'].includes(key)){
-    // Resolve a red review row by the newly entered code first, then by its original code.
-    const editedCode=normalizePart(row.orderPartNo);
+    // Transfer the staging row's quantity together with the edited code.
+    // Match the newly entered code first; use the original unmatched code only as a fallback.
+    const editedCode=normalizePart(row.orderPartNo || (key==='part'?row.part:row.alt));
     const originalCode=normalizePart(row._reviewOriginalPartNo);
-    const rowCodes=[editedCode,normalizePart(row.part),normalizePart(row.alt),originalCode].filter(Boolean);
-    const candidates=[];
+    const candidateRows=[];
     rows.forEach((candidate,i)=>{
-     if(i===rowIndex || candidate._needsReview) return;
+     if(candidate===row || candidate._needsReview) return;
      const main=normalizePart(candidate.part), alt=normalizePart(candidate.alt);
      let score=99;
      if(editedCode && editedCode===main) score=0;
      else if(editedCode && editedCode===alt) score=1;
-     else if(rowCodes.some(code=>code===main)) score=2;
-     else if(rowCodes.some(code=>code===alt)) score=3;
-     if(score<99) candidates.push({candidate,i,score});
+     else if(originalCode && originalCode===main) score=2;
+     else if(originalCode && originalCode===alt) score=3;
+     if(score<99) candidateRows.push({candidate,score});
     });
-    candidates.sort((a,b)=>a.score-b.score);
-    if(candidates.length){
-     const target=candidates[0].candidate;
+    candidateRows.sort((a,b)=>a.score-b.score);
+    if(candidateRows.length){
+     const target=candidateRows[0].candidate;
+     const sourceIndex=rows.indexOf(row);
      const qtyToMove=num(row.onorder);
      const targetBefore=num(target.onorder);
      const finalQty=targetBefore+qtyToMove;
-     // Update the target quantity and linked order-part number before removing the red staging row.
+     // Apply both fields to the target before removing the source review row.
      target.onorder=String(finalQty);
-     target.orderPartNo=target.part || target.orderPartNo || row.orderPartNo || row._reviewOriginalPartNo || row.alt;
-     // Clear staging data before removal so no stale red quantity can be rendered/saved.
-     row.onorder='';
-     row.orderPartNo='';
-     delete row._needsReview;
-     rows.splice(rowIndex,1);
+     target.orderPartNo=target.part || target.orderPartNo || row.orderPartNo || row._reviewOriginalPartNo || '';
+     if(sourceIndex>=0) rows.splice(sourceIndex,1);
      if(!rows.some(r=>r._needsReview) && columnFilters.orderPartNo?.mode==='review') delete columnFilters.orderPartNo;
      save();render();
-     alert(`تم نقل الكمية مع الرقم بنجاح إلى صف القطعة ${target.part || target.alt}. الكمية المنقولة: ${qtyToMove}. الكمية تحت الطلب بعد النقل: ${finalQty}.`);
+     alert(`تمت المطابقة ونقل الرقم والكمية معًا إلى صف القطعة ${target.part || target.alt}. الكمية المنقولة: ${qtyToMove}. الكمية السابقة: ${targetBefore}. الكمية بعد النقل: ${finalQty}.`);
      return;
     } else {
      row._needsReview=true;
-     save();
-     alert(`لم أجد صفًا مطابقًا للرقم «${row.orderPartNo}» أو رقمه الأصلي «${row._reviewOriginalPartNo||''}». لم تُنقل الكمية، وبقي الصف الأحمر كما هو.`);
+     save();render();
+     alert(`لم أجد صفًا مطابقًا للرقم الجديد «${row.orderPartNo || row.part || row.alt}» أو الرقم الأصلي «${row._reviewOriginalPartNo||''}». لم تُحذف الخانة الحمراء ولم تُنقل الكمية.`);
+     return;
     }
    }
    save();render();
@@ -639,7 +669,7 @@ function pasteOrderPartsAndQty(text){
    columnFilters.orderPartNo={mode:'review'};
    render();
    const sample=unmatched.slice(0,15).join('، ');
-   alert(`تمت مطابقة ${matched} قطعة. أُضيفت ${reviewAdded} أرقام غير مطابقة إلى نهاية الجدول مع كمياتها، ولُوّنت بالأحمر للمراجعة اليدوية دون ربطها بقطع خاطئة.\n\nعينة: ${sample}${unmatched.length>15?' ...':''}\n\nلرؤيتها فقط، افتح سهم عمود «رقم القطعة تحت الطلب» واختر «إظهار الأرقام الملوّنة للمراجعة». بعد تصحيح رقم القطعة أو الرقم البديل في الصف الملوّن، ستزول العلامة تلقائيًا.`);
+   alert(`تمت مطابقة ${matched} قطعة. أُضيفت ${reviewAdded} أرقام غير مطابقة إلى نهاية الجدول مع كمياتها، ولُوّنت بالأحمر للمراجعة اليدوية دون ربطها بقطع خاطئة.\n\nعينة: ${sample}${unmatched.length>15?' ...':''}\n\nلرؤيتها فقط، افتح سهم عمود «رقم القطعة تحت الطلب» واختر «إظهار الأرقام الملوّنة للمراجعة». أدخل الرقم البديل في عمود «الرقم البديل للمراجعة» داخل الصف الأحمر؛ عند العثور عليه في رقم القطعة أو الرقم البديل بجدول القطع، تنتقل الكمية معه ويُحذف الصف الأحمر.`);
  }else if(matched){alert(`تمت مطابقة جميع القطع (${matched}) وتحديث الكميات بنجاح.`)}
  else alert('لم يتم العثور على تطابق صالح، ولم تتغير البيانات.');
 }
