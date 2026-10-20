@@ -165,6 +165,30 @@ footer{color:#858782;font-size:12px;padding:6px 2px 28px}
 }
 @media(max-width:520px){.settings,.stats{grid-template-columns:1fr}header{padding:20px}}
 
+
+.pager{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:14px;padding:10px 2px 0;color:#686b68;font-size:12px}
+.pager-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pager button{min-height:36px;padding:7px 13px}
+.pager button:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none}
+.pager select{min-height:36px;padding:6px 10px;width:auto;min-width:76px}
+.page-size-label{margin:0 2px 0 0;font-size:12px}
+
+
+.th-content{display:flex;align-items:center;justify-content:center;gap:7px;min-height:28px}
+.filter-trigger{min-height:25px!important;width:26px;padding:2px 5px!important;border:1px solid #e2c02b!important;border-bottom:1px solid #d0aa00!important;border-radius:6px!important;background:#fff8d6!important;color:#242424!important;font-size:10px!important;box-shadow:none!important}
+.filter-trigger:hover{background:#ffe76b!important;transform:none!important}
+.column-menu{background:#fff;border:1px solid #deded8;border-radius:12px;box-shadow:0 12px 34px rgba(0,0,0,.18);padding:10px;color:#202124;font:13px "Segoe UI",Tahoma,Arial,sans-serif}
+.menu-title{font-weight:800;padding:5px 7px 10px;border-bottom:1px solid #ececec;margin-bottom:6px}
+.menu-option{display:block;width:100%;text-align:right;background:#fff!important;color:#252525!important;border:0!important;border-radius:7px!important;box-shadow:none!important;min-height:36px!important;padding:8px 9px!important;font-weight:600}
+.menu-option:hover{background:#fff5c6!important;transform:none!important}
+.menu-divider{height:1px;background:#ececec;margin:7px 0}
+.menu-label{display:block;margin:9px 4px 5px;color:#6b6b6b}
+.menu-input{width:100%;min-height:36px;border:1px solid #ddd;border-radius:7px;padding:8px}
+.menu-row{display:flex;gap:6px;margin-top:9px}
+.menu-row button{flex:1;min-height:34px;padding:7px 8px!important;font-size:12px}
+.menu-apply{background:#171717!important;color:#fff!important}
+.menu-clear{background:#fff!important;color:#333!important;border:1px solid #ddd!important}
+
 </style>
 </head>
 <body>
@@ -201,8 +225,17 @@ footer{color:#858782;font-size:12px;padding:6px 2px 28px}
 <section class="panel">
 <div class="panel-title">📦 بيانات القطع <span class="badge" id="rowBadge">0 صف</span></div>
 <div class="table-wrap"><table id="dataTable"><thead><tr id="headRow"></tr></thead><tbody id="tbody"></tbody></table></div>
+<div class="pager" id="pager">
+ <span id="pageInfo">صفحة 1</span>
+ <div class="pager-actions">
+  <button class="secondary" id="prevPage" type="button">السابق</button>
+  <button class="secondary" id="nextPage" type="button">التالي</button>
+  <label class="page-size-label" for="pageSize">عدد الصفوف</label>
+  <select id="pageSize"><option value="50">50</option><option value="100" selected>100</option><option value="200">200</option><option value="500">500</option></select>
+ </div>
+</div>
 </section>
-<footer>تُحفظ البيانات محليًا داخل هذا المتصفح تلقائيًا. استخدم «نسخة احتياطية JSON» للاحتفاظ بنسخة أو نقلها إلى جهاز آخر.</footer>
+<footer>تُحفظ البيانات تلقائيًا داخل هذا المتصفح. لتسريع العمل، يعرض الجدول 100 صف في كل صفحة. الصق رد المورد في عمود «رقم القطعة للمورد» مع تضمين رقم القطعة الأصلي ورقم المورد ليتم ترتيبها ومطابقتها تلقائيًا.</footer>
 </div>
 <script>
 const cols=[
@@ -214,9 +247,13 @@ const cols=[
  {key:'sales25',label:'مبيعات 2025',type:'number'},
  {key:'sales26',label:'مبيعات 2026',type:'number'},
  {key:'total',label:'إجمالي المبيعات',calc:true},
- {key:'required',label:'الكمية المطلوبة',calc:true}
+ {key:'required',label:'الكمية المطلوبة',calc:true},
+ {key:'supplierPartNo',label:'رقم القطعة للمورد',type:'text',wide:false},
+ {key:'supplierPrice',label:'سعر المورد',type:'number'},
+ {key:'supplierQty',label:'كمية المورد',type:'number'},
+ {key:'leadTime',label:'مدة التوريد',type:'number'}
 ];
-let rows=[];let sortKey='',sortDir=1,filterText='';
+let rows=[];let sortKey='',sortDir=1,filterText='';let columnFilters={};let currentPage=0;let pageSize=100;
 const $=id=>document.getElementById(id);
 function num(v){const n=Number(String(v??'').replace(/[,٬\s]/g,'').replace(/[٫]/g,'.'));return Number.isFinite(n)?n:0}
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -226,29 +263,88 @@ function total(r){return num(r.sales25)+num(r.sales26)}
 function required(r){return Math.max(0,Math.ceil(monthly(r)*horizon()-num(r.current)-num(r.onorder)))}
 function val(r,k){if(k==='total')return total(r);if(k==='required')return required(r);return r[k]??''}
 function renderHead(){
- $('headRow').innerHTML='<th>#</th>'+cols.map(c=>`<th class="sort" data-sort="${c.key}">${c.label} ${sortKey===c.key?(sortDir===1?'▲':'▼'):'↕'}</th>`).join('');
- document.querySelectorAll('[data-sort]').forEach(th=>th.onclick=()=>{if(sortKey===th.dataset.sort)sortDir*=-1;else{sortKey=th.dataset.sort;sortDir=1}render()});
+ $('headRow').innerHTML='<th>#</th>'+cols.map(c=>`<th class="sort" data-col="${c.key}"><div class="th-content"><span>${c.label}</span><button type="button" class="filter-trigger" data-menu="${c.key}" aria-label="فرز وتصفية ${c.label}" title="فرز وتصفية">▼</button></div></th>`).join('');
+ document.querySelectorAll('[data-menu]').forEach(btn=>btn.onclick=e=>{
+   e.stopPropagation();
+   const key=btn.dataset.menu;
+   const old=document.querySelector('.column-menu');
+   if(old){const same=old.dataset.key===key;old.remove();if(same)return;}
+   openColumnMenu(key,btn);
+ });
+}
+function openColumnMenu(key,button){
+ const col=cols.find(c=>c.key===key);if(!col)return;
+ const menu=document.createElement('div');menu.className='column-menu';menu.dataset.key=key;
+ const active=columnFilters[key]||{mode:'all',value:''};
+ menu.innerHTML=`
+  <div class="menu-title">فرز وتصفية: ${esc(col.label)}</div>
+  <button type="button" class="menu-option" data-action="asc">⬆ من الأصغر إلى الأكبر</button>
+  <button type="button" class="menu-option" data-action="desc">⬇ من الأكبر إلى الأصغر</button>
+  <div class="menu-divider"></div>
+  <button type="button" class="menu-option" data-action="filled">✓ إظهار الخانات التي تحتوي بيانات</button>
+  <button type="button" class="menu-option" data-action="empty">□ إظهار الخانات الفارغة فقط</button>
+  <label class="menu-label">تصفية حسب قيمة</label>
+  <input class="menu-input" type="text" placeholder="اكتب الرقم أو النص..." value="${esc(active.mode==='contains'||active.mode==='equals'?active.value:'')}">
+  <div class="menu-row"><button type="button" class="menu-apply" data-action="contains">تطبيق</button><button type="button" class="menu-clear" data-action="clear">إلغاء التصفية</button></div>`;
+ document.body.appendChild(menu);
+ const rect=button.getBoundingClientRect();
+ menu.style.position='fixed';menu.style.zIndex='10000';
+ const width=260;menu.style.width=width+'px';
+ let left=Math.max(8,Math.min(window.innerWidth-width-8,rect.left-width/2+rect.width/2));
+ let top=Math.min(window.innerHeight-menu.offsetHeight-8,rect.bottom+5);
+ menu.style.left=left+'px';menu.style.top=Math.max(8,top)+'px';
+ menu.addEventListener('click',e=>{
+   const action=e.target.closest('[data-action]')?.dataset.action;if(!action)return;
+   if(action==='asc'||action==='desc'){sortKey=key;sortDir=action==='asc'?1:-1;menu.remove();render();return}
+   if(action==='filled'||action==='empty'){columnFilters[key]={mode:action};currentPage=0;menu.remove();render();return}
+   if(action==='contains'){
+     const value=menu.querySelector('.menu-input').value.trim();
+     columnFilters[key]=value?{mode:'contains',value}:{mode:'all',value:''};
+     currentPage=0;menu.remove();render();return;
+   }
+   if(action==='clear'){delete columnFilters[key];currentPage=0;menu.remove();render()}
+ });
+ const close=e=>{if(!menu.contains(e.target)&&!button.contains(e.target)){menu.remove();document.removeEventListener('pointerdown',close,true)}};
+ setTimeout(()=>document.addEventListener('pointerdown',close,true),0);
 }
 function render(){
  renderHead();
- const filtered=rows.map((r,i)=>({r,i})).filter(x=>!filterText||cols.some(c=>String(val(x.r,c.key)).toLowerCase().includes(filterText.toLowerCase())));
+ const filtered=rows.map((r,i)=>({r,i})).filter(x=>
+   (!filterText||cols.some(c=>String(val(x.r,c.key)).toLowerCase().includes(filterText.toLowerCase()))) &&
+   cols.every(c=>{
+     const f=columnFilters[c.key]; if(!f)return true;
+     const value=String(val(x.r,c.key)??'').trim();
+     if(f.mode==='filled')return value!=='';
+     if(f.mode==='empty')return value==='';
+     if(f.mode==='contains')return value.toLowerCase().includes(f.value.toLowerCase());
+     if(f.mode==='equals')return value.toLowerCase()===f.value.toLowerCase();
+     return true;
+   })
+ );
  if(sortKey) filtered.sort((a,b)=>{
    const av=String(val(a.r,sortKey)??'').trim(), bv=String(val(b.r,sortKey)??'').trim();
    if(!av && bv) return 1;
    if(av && !bv) return -1;
    return av.localeCompare(bv,'en',{numeric:true,sensitivity:'base'})*sortDir;
  });
- $('tbody').innerHTML=filtered.map(({r,i},displayIndex)=>`<tr><td>${displayIndex+1}</td>${cols.map(c=>{
- let v=val(r,c.key);
- if(c.calc)return `<td class="calculated ${c.key==='required'&&v>0?'needed':''}">${Number(v).toLocaleString('en-US')}</td>`;
- return `<td><input data-i="${i}" data-k="${c.key}" class="${c.wide?'wide':''}" type="${c.type==='number'?'number':'text'}" ${c.type==='number'?'min="0" step="any"':''} value="${esc(v)}" aria-label="${c.label}"></td>`;
+ const pageCount=Math.max(1,Math.ceil(filtered.length/pageSize));
+ currentPage=Math.min(Math.max(0,currentPage),pageCount-1);
+ const start=currentPage*pageSize;
+ const visible=filtered.slice(start,start+pageSize);
+ $('tbody').innerHTML=visible.map(({r,i},displayIndex)=>`<tr><td>${start+displayIndex+1}</td>${cols.map(c=>{
+  let v=val(r,c.key);
+  if(c.calc)return `<td class="calculated ${c.key==='required'&&v>0?'needed':''}">${Number(v).toLocaleString('en-US')}</td>`;
+  return `<td><input data-i="${i}" data-k="${c.key}" class="${c.wide?'wide':''}" type="${c.type==='number'?'number':'text'}" ${c.type==='number'?'min="0" step="any"':''} value="${esc(v)}" aria-label="${c.label}"></td>`;
  }).join('')}</tr>`).join('');
- $('rowBadge').textContent=rows.length+' صف';
+ $('rowBadge').textContent=rows.length.toLocaleString('en-US')+' صف';
  $('statRows').textContent=rows.filter(r=>Object.values(r).some(v=>String(v??'').trim()!=='')).length.toLocaleString('en-US');
- $('statStock').textContent=rows.reduce((s,r)=>s+num(r.current),0).toLocaleString('en-US');
- $('statOrder').textContent=rows.reduce((s,r)=>s+num(r.onorder),0).toLocaleString('en-US');
- $('statNeed').textContent=rows.reduce((s,r)=>s+required(r),0).toLocaleString('en-US');
+ $('statStock').textContent=rows.reduce((sum,r)=>sum+num(r.current),0).toLocaleString('en-US');
+ $('statOrder').textContent=rows.reduce((sum,r)=>sum+num(r.onorder),0).toLocaleString('en-US');
+ $('statNeed').textContent=rows.reduce((sum,r)=>sum+required(r),0).toLocaleString('en-US');
  $('statNeedLines').textContent=rows.filter(r=>rowHasData(r)&&required(r)>0).length.toLocaleString('en-US');
+ $('pageInfo').textContent=filtered.length ? `عرض ${start+1}–${Math.min(start+pageSize,filtered.length)} من ${filtered.length.toLocaleString('en-US')} صف • صفحة ${currentPage+1} من ${pageCount}` : 'لا توجد نتائج';
+ $('prevPage').disabled=currentPage===0;
+ $('nextPage').disabled=currentPage>=pageCount-1;
  $('tbody').querySelectorAll('input').forEach(inp=>{
   inp.addEventListener('change',()=>{rows[+inp.dataset.i][inp.dataset.k]=inp.value;save();renderStatsOnly()});
   inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();const all=[...$('tbody').querySelectorAll('input')],idx=all.indexOf(inp);all[idx+1]?.focus()}});
@@ -287,6 +383,7 @@ function pasteGridText(text,startRow=0,startCol=0){
    });
  });
  save();
+ currentPage=Math.floor(startRow/pageSize);
  render();
 }
 
@@ -295,21 +392,110 @@ function newRow(){return Object.fromEntries(cols.filter(c=>!c.calc).map(c=>[c.ke
 function rowHasData(r){return cols.filter(c=>!c.calc).some(c=>String(r?.[c.key]??'').trim()!=='')}
 function ensure(n){while(rows.length<n)rows.push(newRow())}
 
-// دعم اللصق المباشر من Excel داخل خلايا الجدول: كل سطر في صف، وكل Tab في عمود.
+// لصق مباشر من Excel، مع مطابقة رد المورد برقم القطعة حتى لو كان ترتيب الرد مختلفًا.
 document.addEventListener('paste',e=>{
  const input=e.target;
  if(!input || !input.matches('#dataTable tbody input')) return;
  const text=(e.clipboardData || window.clipboardData).getData('text');
- if(!text || (!text.includes('\n') && !text.includes('\r') && !text.includes('\t'))) return;
+ if(!text) return;
+ const isSupplierColumn=input.dataset.k==='supplierPartNo';
+ if(!isSupplierColumn && !text.includes('\n') && !text.includes('\r') && !text.includes('\t')) return;
  e.preventDefault();
  const rowIndex=Number(input.dataset.i)||0;
+ if(isSupplierColumn){
+   if(text.includes('\t')) pasteSupplierReply(text,rowIndex);
+   else pasteSupplierPartColumn(text);
+   return;
+ }
  const editableCols=cols.filter(c=>!c.calc);
  const colIndex=Math.max(0,editableCols.findIndex(c=>c.key===input.dataset.k));
  pasteGridText(text,rowIndex,colIndex);
 });
 
-$('searchBox').addEventListener('input',()=>{filterText=$('searchBox').value;render()});
-$('addRow').onclick=()=>{rows.push(newRow());save();render();$('tbody tr:last-child input')?.focus()};
+function normalizePart(v){return String(v??'').trim().toUpperCase().replace(/[^A-Z0-9]/g,'')}
+function pasteSupplierPartColumn(text){
+ const values=text.replace(/\r/g,'').split('\n').map(v=>v.trim()).filter(v=>v!=='');
+ if(!values.length)return;
+ const existing=new Map();
+ rows.forEach((r,i)=>{
+   [r.part,r.alt].forEach(v=>{
+     const k=normalizePart(v);
+     if(k && !existing.has(k)) existing.set(k,i);
+   });
+ });
+ let matched=0,unmatched=[];
+ values.forEach(value=>{
+   const key=normalizePart(value);
+   const rowIndex=existing.get(key);
+   if(rowIndex!==undefined){
+     rows[rowIndex].supplierPartNo=value;
+     matched++;
+   }else unmatched.push(value);
+ });
+ if(matched){
+   save();
+   const firstMatched=rows.findIndex(r=>values.some(v=>normalizePart(v)===normalizePart(r.supplierPartNo) && (normalizePart(r.part)===normalizePart(v)||normalizePart(r.alt)===normalizePart(v))));
+   if(firstMatched>=0) currentPage=Math.floor(firstMatched/pageSize);
+   render();
+ }
+ if(unmatched.length){
+   alert(`تمت مطابقة ${matched} رقمًا ووضعها بجانب رقم القطعة الصحيح. تعذر العثور على ${unmatched.length} رقمًا من القائمة ضمن «رقم القطعة» أو «الرقم البديل»، ولم تُضف هذه الأرقام إلى صفوف عشوائية.`);
+ }else{
+   alert(`تمت مطابقة جميع الأرقام (${matched}) ووضع كل رقم في صف القطعة المطابق، بغض النظر عن مكان الصف الذي ضغطت عليه.`);
+ }
+}
+function pasteSupplierReply(text,startRow=0){
+ let lines=text.replace(/\r/g,'').split('\n').filter(line=>line.trim()!=='');
+ const table=lines.map(line=>line.split('\t').map(v=>v.trim()));
+ if(!table.length)return;
+ const width=Math.max(...table.map(row=>row.length));
+ if(width<2){pasteGridText(text,startRow,cols.filter(c=>!c.calc).findIndex(c=>c.key==='supplierPartNo'));return}
+ const headers=table[0].map(v=>v.toLowerCase());
+ const headerRow=headers.some(v=>/part|item|supplier|vendor|قطعة|مورد|رقم/.test(v));
+ let data=headerRow?table.slice(1):table;
+ if(!data.length){alert('لم أجد صفوف بيانات في رد المورد.');return}
+ const existing=new Map();
+ rows.forEach((r,i)=>{
+   [r.part,r.alt].forEach(v=>{const k=normalizePart(v);if(k){if(!existing.has(k))existing.set(k,i)}});
+ });
+ // Identify which reply column contains our own part numbers by exact match against Part No / Alternate No.
+ let sourceCol=-1,bestScore=0;
+ for(let c=0;c<width;c++){
+   let score=0;
+   data.forEach(row=>{if(existing.has(normalizePart(row[c])))score++});
+   if(score>bestScore){bestScore=score;sourceCol=c}
+ }
+ if(sourceCol<0 || bestScore===0){
+   alert('لم أجد أرقامًا من رد المورد تطابق عمود «رقم القطعة» أو «الرقم البديل». لم يتم تغيير البيانات. انسخ رد المورد بحيث يتضمن عمود رقم القطعة الأصلي وعمود رقم القطعة لدى المورد.');
+   return;
+ }
+ // Choose the most populated other column as the supplier's part-number column.
+ let targetCol=-1,bestFill=-1;
+ for(let c=0;c<width;c++){
+   if(c===sourceCol)continue;
+   const fill=data.reduce((n,row)=>n+(String(row[c]??'').trim()?1:0),0);
+   if(fill>bestFill){bestFill=fill;targetCol=c}
+ }
+ if(targetCol<0){alert('رد المورد لا يحتوي على عمود ثانٍ لأرقام القطع.');return}
+ let matched=0,unmatched=0;
+ data.forEach(row=>{
+   const key=normalizePart(row[sourceCol]);
+   const supplierNo=String(row[targetCol]??'').trim();
+   if(!key || !supplierNo)return;
+   const index=existing.get(key);
+   if(index===undefined){unmatched++;return}
+   rows[index].supplierPartNo=supplierNo;
+   matched++;
+ });
+ if(matched){save();render();alert('تم ترتيب أرقام المورد ومطابقتها مع أرقام القطع بنجاح. عدد القطع المطابقة: '+matched+(unmatched?'، غير المطابقة: '+unmatched:''));}
+ else alert('لم يتم العثور على تطابق صالح، ولم تتغير البيانات.');
+}
+
+$('searchBox').addEventListener('input',()=>{filterText=$('searchBox').value;currentPage=0;render()});
+$('prevPage').onclick=()=>{if(currentPage>0){currentPage--;render()}};
+$('nextPage').onclick=()=>{currentPage++;render()};
+$('pageSize').addEventListener('change',()=>{pageSize=Number($('pageSize').value)||100;currentPage=0;render()});
+$('addRow').onclick=()=>{rows.push(newRow());currentPage=Math.floor((rows.length-1)/pageSize);save();render();$('tbody tr:last-child input')?.focus()};
 ['plan','ship','cover','months26'].forEach(id=>$(id).addEventListener('input',()=>{save();renderStatsOnly()}));
 $('exportExcel').onclick=()=>{
  const tableRows=[cols.map(c=>c.label),...rows.map(r=>cols.map(c=>val(r,c.key)))];
