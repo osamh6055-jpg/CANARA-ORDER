@@ -193,7 +193,6 @@ footer{color:#858782;font-size:12px;padding:6px 2px 28px}
 <input id="searchBox" type="text" placeholder="بحث برقم القطعة أو الاسم..." style="max-width:260px" aria-label="بحث وتصفية">
 <button class="secondary" id="exportExcel">تصدير Excel</button>
 <button class="secondary" id="exportPdf">تصدير PDF</button>
-<button class="secondary" id="exportJson">نسخة احتياطية JSON</button>
 <button class="warn" id="clearData">مسح البيانات</button>
 <span class="badge">الحساب تلقائي</span>
 </div>
@@ -328,7 +327,6 @@ $('exportPdf').onclick=()=>{
  win.document.close();
  win.onload=()=>win.print();
 };
-$('exportJson').onclick=()=>download('spare-parts-backup.json',JSON.stringify({rows,settings:{plan:$('plan').value,ship:$('ship').value,cover:$('cover').value,months26:$('months26').value}},null,2),'application/json');
 $('clearData').onclick=()=>{if(confirm('هل تريد مسح جميع بيانات القطع؟')){rows=[];save();render()}};
 try{const saved=JSON.parse(localStorage.getItem('sparePartsPlannerV1')||'null');if(saved){rows=(saved.rows||[]).map(old=>{const r=newRow();cols.filter(c=>!c.calc).forEach(c=>{r[c.key]=old?.[c.key]??''});return r}).filter(rowHasData);if(saved.settings)Object.entries(saved.settings).forEach(([k,v])=>{if($(k))$(k).value=v})}}catch(e){}
 if(!rows.length)rows=Array.from({length:10},newRow);
