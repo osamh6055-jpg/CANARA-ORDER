@@ -1,234 +1,209 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>تنظيم الطلبات</title>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>كنارة للطلبات</title>
 <style>
-:root { color-scheme: light dark; --bg: light-dark(#f5f5f3,#111111); --surface: light-dark(#ffffff,#1c1c1c); --surface2: light-dark(#f0f0ed,#292929); --text: light-dark(#171717,#f6f6f4); --muted: light-dark(#666666,#b8b8b8); --line: light-dark(#deded9,#414141); --accent: light-dark(#f8c900,#ffd21c); --accentText: #171717; --warn: light-dark(#fff4c2,#3b3210); --danger: light-dark(#a43131,#ff9999); }
-* { box-sizing: border-box; }
-body { margin:0; background:var(--bg); color:var(--text); font-family: "Segoe UI", Tahoma, Arial, sans-serif; font-weight:400; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; }
-#app { min-height:100vh; width:100%; background:radial-gradient(ellipse at 10% 0%, light-dark(#ffffff,#262626) 0%, var(--bg) 52%); padding:24px; border-top:7px solid var(--accent); }
-header { display:flex; justify-content:space-between; align-items:center; gap:18px; flex-wrap:wrap; margin-bottom:22px; }
-.brand { display:flex; gap:13px; align-items:center; }
-.menu-toggle { width:42px; height:42px; padding:8px; display:flex; flex-direction:column; justify-content:center; gap:5px; background:var(--surface); }
-.menu-toggle span { display:block; height:3px; width:100%; border-radius:3px; background:var(--text); }
-.sidebar-backdrop { display:none; position:fixed; inset:0; background:#0007; z-index:20; }
-.sidebar { position:fixed; top:0; right:0; bottom:0; width:min(330px,85vw); background:var(--surface); border-left:3px solid var(--accent); box-shadow:-12px 0 35px #0002; z-index:21; padding:22px 16px; transform:translateX(110%); transition:transform .22s ease; overflow:auto; }
-.sidebar.open { transform:translateX(0); }
-.sidebar-backdrop.open { display:block; }
-.sidebar-head { display:flex; align-items:center; justify-content:space-between; gap:12px; padding-bottom:18px; border-bottom:1px solid var(--line); margin-bottom:14px; }
-.sidebar-head strong { font-size:18px; }
-.nav-item { display:flex; width:100%; text-align:right; margin:7px 0; padding:13px 14px; border-radius:10px; font-weight:700; }
-.nav-item.active { background:var(--accent); color:var(--accentText); border-color:var(--accent); }
-.view-section { display:none; }
-.view-section.active { display:block; }
-.supplier-toolbar { display:flex; gap:10px; flex-wrap:wrap; align-items:center; padding:14px; border-bottom:1px solid var(--line); }
-body.suppliers-active header .actions > button:not(#langToggle), body.suppliers-active header .actions > .filelabel { display:none; }
-.supplier-toolbar input[type=text] { flex:1; min-width:180px; }
-.supplier-table { min-width:1150px; }
-.status-tag { display:inline-block; padding:4px 8px; border-radius:7px; background:var(--warn); font-size:12px; }
-.status-tag.matched { background:#d9f2df; color:#175b2a; }
-.status-tag.unmatched { background:#ffe2b5; color:#744500; }
-.supplier-summary { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; padding:14px; }
-.supplier-summary .stat { padding:12px; }
-.supplier-summary .value { font-size:22px; }
-.supplier-note { margin:14px; }
-.logo { width:64px; height:64px; border-radius:8px; background:#fff; border:1px solid var(--line); color:var(--accentText); display:grid; place-items:center; overflow:hidden; box-shadow:4px 4px 0 #171717; flex:0 0 64px; }
-.logo img { display:block; width:100%; height:100%; object-fit:contain; padding:4px; }
-h1 { margin:0; font-size:27px; font-weight:800; letter-spacing:0; line-height:1.5; }
-.sub { color:var(--muted); font-size:14px; font-weight:500; line-height:1.8; margin-top:5px; }
-.actions { display:flex; flex-wrap:wrap; gap:8px; }
-.lang-toggle { background:var(--accent); border-color:var(--accent); color:var(--accentText); font-weight:800; }
-button,.filelabel { border:1px solid var(--line); border-radius:10px; background:var(--surface); color:var(--text); padding:10px 14px; font:inherit; font-size:14px; font-weight:600; line-height:1.6; cursor:pointer; display:inline-flex; align-items:center; gap:7px; }
-button.primary { background:var(--accent); border-color:var(--accent); color:var(--accentText); font-weight:800; box-shadow:0 3px 0 #171717; }
-button:hover,.filelabel:hover { filter:brightness(.97); }
-input,select { background:var(--surface); color:var(--text); border:1px solid var(--line); border-radius:9px; padding:10px 11px; font:inherit; font-size:13px; min-width:0; }
-.stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-bottom:18px; }
-.stat { background:var(--surface); border:1px solid var(--line); border-top:3px solid var(--accent); border-radius:3px 3px 12px 12px; padding:16px; }
-.stat .label { color:var(--muted); font-size:13px; font-weight:600; line-height:1.7; }
-.stat .value { font-size:28px; font-weight:800; line-height:1.4; margin-top:8px; }
-.stat .note { color:var(--muted); font-size:12px; line-height:1.7; margin-top:5px; }
-.panel { background:var(--surface); border:1px solid var(--line); border-radius:15px; overflow:hidden; }
-.toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; padding:14px; border-bottom:1px solid var(--line); }
-.toolbar-left { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
-.search { width:min(300px,75vw); }
-.smallnote { color:var(--muted); font-size:12px; padding:0 14px 12px; }
-.tablewrap { width:100%; overflow:auto; max-height:58vh; }
-table { border-collapse:separate; border-spacing:0; width:100%; min-width:1200px; font-size:13px; }
-th,td { padding:13px 12px; border-bottom:1px solid var(--line); text-align:right; white-space:nowrap; line-height:1.8; }
-th { background:var(--surface2); color:var(--text); border-bottom:3px solid var(--accent); font-size:13px; font-weight:800; position:sticky; top:0; z-index:1; }
-tbody tr:hover { background:var(--surface2); }
-td.num { font-variant-numeric:tabular-nums; }
-.part { font-weight:700; direction:ltr; text-align:right; display:inline-block; }
-.qty { font-weight:800; color:var(--accent); }
-.need { font-weight:800; }
-.need.high { color:var(--danger); }
-.tag { display:inline-block; padding:4px 7px; border-radius:6px; background:var(--warn); font-size:10px; }
-.rowbtn { padding:6px 9px; font-size:12px; font-weight:600; }
-.empty { text-align:center; padding:40px; color:var(--muted); }
-footer { color:var(--muted); font-size:11px; margin-top:14px; line-height:1.8; }
-.modalback { display:none; position:fixed; inset:0; background:#0008; z-index:5; padding:18px; align-items:center; justify-content:center; }
-.modalback.show { display:flex; }
-.modal { background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:20px; width:min(560px,100%); max-height:90vh; overflow:auto; }
-.modal h2 { font-size:18px; margin:0 0 16px; }
-.formgrid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-.field { display:flex; flex-direction:column; gap:6px; }
-.field label { font-size:13px; font-weight:600; line-height:1.7; color:var(--muted); }
-.field input { width:100%; }
-.modalactions { display:flex; justify-content:flex-start; gap:8px; margin-top:18px; }
-.tip { background:var(--surface2); border:1px solid var(--line); border-radius:10px; padding:12px; color:var(--muted); font-size:12px; line-height:1.8; margin-top:12px; }
-@media(max-width:800px) { #app{padding:14px;} h1{font-size:23px;} .sub{font-size:13px;} .stats{grid-template-columns:repeat(2,minmax(0,1fr));} .stat .value{font-size:23px;} .formgrid{grid-template-columns:1fr;} }
-@media print { body,#app { background:#fff !important; color:#111 !important; padding:0 !important; border:0 !important; } header .actions,.toolbar-left,.rowbtn,.smallnote,footer,.modalback { display:none !important; } .stats { grid-template-columns:repeat(4,1fr); } .stat,.panel { background:#fff !important; border:1px solid #bbb; break-inside:avoid; } .tablewrap { overflow:visible; max-height:none; } table { min-width:0; width:100%; font-size:8px; border-collapse:collapse; } th,td { position:static; white-space:normal; padding:4px 3px; border:1px solid #bbb; color:#111 !important; } th { background:#f5d21a !important; } h1 { font-size:20px; } }
+:root{--green:#176b49;--green2:#23845b;--bg:#f4f7f6;--line:#dce5e1;--ink:#172b24;--muted:#65766f;--blue:#e7f2ff;--gold:#e8b84b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:Arial,Tahoma,sans-serif;color:var(--ink)}
+header{background:linear-gradient(120deg,#145b3e,#21835a);color:white;padding:20px 24px;box-shadow:0 3px 12px #163c2a22}
+h1{margin:0 0 7px;font-size:23px}header p{margin:0;color:#e2f4e9;font-size:13px}
+.wrap{max-width:1600px;margin:18px auto;padding:0 16px}
+.panel{background:white;border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:0 4px 14px #153c2a08}
+.panel-title{font-weight:700;margin-bottom:13px;display:flex;align-items:center;gap:8px}
+.settings{display:grid;grid-template-columns:repeat(4,minmax(130px,1fr));gap:12px}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+input,select,button,textarea{font:inherit}input[type=number],input[type=text],select{width:100%;border:1px solid #cbd8d2;border-radius:8px;padding:10px;background:white;color:var(--ink);outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--green2);box-shadow:0 0 0 3px #23845b18}
+.help{font-size:12px;color:var(--muted);line-height:1.7;margin-top:10px}
+.actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+button,.filebtn{border:0;border-radius:9px;padding:10px 14px;cursor:pointer;font-weight:700;background:var(--green);color:white}
+button:hover,.filebtn:hover{filter:brightness(1.06)}button.secondary,.filebtn.secondary{background:#e9f1ed;color:#22543d;border:1px solid #d3e2da}button.warn{background:#fff0d6;color:#774b00;border:1px solid #f0d49a}button.danger{background:#fff0ef;color:#9b302b;border:1px solid #f1c9c6}
+input[type=file]{display:none}
+.stats{display:grid;grid-template-columns:repeat(5,minmax(120px,1fr));gap:10px;margin-bottom:14px}
+.stat{padding:13px 15px;border-radius:12px;background:white;border:1px solid var(--line)}.stat small{color:var(--muted)}.stat strong{display:block;font-size:22px;margin-top:5px}
+.pastebox{display:grid;grid-template-columns:minmax(240px,1fr) auto;gap:10px;align-items:end}
+textarea{width:100%;min-height:78px;resize:vertical;border:1px solid #cbd8d2;border-radius:8px;padding:10px;direction:ltr;text-align:left}
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:10px;max-height:60vh}
+table{border-collapse:separate;border-spacing:0;width:100%;min-width:1450px;background:white;font-size:13px}
+th{position:sticky;top:0;z-index:2;background:#dcecff;color:#172f46;font-weight:700;white-space:normal;min-width:110px}
+th,td{padding:7px 8px;border-left:1px solid #d9e1e7;border-bottom:1px solid #d9e1e7;text-align:center}
+th:first-child,td:first-child{position:sticky;right:0;z-index:1;background:#f7faf9}
+th:first-child{z-index:3;background:#cfe3f7}td input{min-width:85px;padding:7px;border-radius:5px;border:1px solid transparent;text-align:center;background:transparent}td input:focus{background:white;border-color:var(--green2)}td .wide{min-width:170px;text-align:right}td.calculated{background:#f4faf6;font-weight:700}td.needed{background:#fff4d7;color:#704900;font-weight:700}
+th button{padding:3px 6px;background:transparent;color:#34516a;font-size:12px;border-radius:4px}
+.sort{cursor:pointer}.sort:hover{background:#c9def5}
+tfoot td{background:#edf5f0;font-weight:bold}
+.badge{display:inline-block;border-radius:20px;background:#e8f4ec;color:#176b49;padding:4px 8px;font-size:11px}
+footer{color:var(--muted);font-size:12px;padding:4px 2px 24px}
+@media(max-width:800px){.settings,.stats{grid-template-columns:repeat(2,minmax(120px,1fr))}.pastebox{grid-template-columns:1fr}header{padding:17px}.wrap{padding:0 9px}}
 </style>
 </head>
 <body>
-<div id="app">
-<header>
-  <div class="brand"><button type="button" class="menu-toggle" id="menuToggle" aria-label="فتح القائمة" title="القائمة"><span></span><span></span><span></span></button><div class="logo"><img src="https://i.postimg.cc/X7cXtbPp/allwht-alkharjyt.jpg" alt="شعار الشركة"></div><div><h1 id="pageTitle">تنظيم الطلبات</h1><div class="sub" id="pageSubtitle">إدارة احتياج قطع الغيار وتخطيط المشتريات</div></div></div>
-  <div class="actions">
-    <button type="button" id="langToggle" class="lang-toggle" aria-label="Switch language">English</button>
-    <button type="button" id="addBtn" class="primary" onclick="openModal()">＋ إضافة قطعة</button>
-    <button type="button" id="saveTableBtn">حفظ الجدول كامل</button>
-    <button type="button" id="newOrderBtn">حفظ الحالي وبدء طلب جديد</button>
-    <button type="button" id="clearTableBtn">حذف الجدول الحالي</button>
-    <label class="filelabel">⇧ استيراد Excel / CSV<input id="fileInput" type="file" accept=".xlsx,.xls,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" hidden></label>
-    <button id="exportBtn">⇩ تصدير Excel</button>
-    <button id="pdfBtn">⇩ تصدير PDF</button>
-  </div>
-</header>
-<div class="sidebar-backdrop" id="sidebarBackdrop"></div><aside class="sidebar" id="sidebar" aria-label="القائمة الرئيسية"><div class="sidebar-head"><strong>القائمة الرئيسية</strong><button type="button" id="closeSidebar">✕</button></div><button type="button" class="nav-item active" data-view="orders">تنظيم الطلبات</button><button type="button" class="nav-item" data-view="suppliers">الموردين</button></aside>
-<main id="ordersView" class="view-section active">
-<section class="stats">
-  <div class="stat"><div class="label">إجمالي القطع</div><div class="value" id="totalParts">0</div><div class="note">عدد الأصناف المسجلة</div></div>
-  <div class="stat"><div class="label">قطع تحتاج إلى طلب</div><div class="value" id="needParts">0</div><div class="note">حسب التوقع الحالي</div></div>
-  <div class="stat"><div class="label">إجمالي الكمية المقترحة</div><div class="value" id="totalNeed">0</div><div class="note">وحدة من قطع الغيار</div></div>
-  <div class="stat"><div class="label">إجمالي المبيعات للسنتين</div><div class="value" id="totalSales">0</div><div class="note">مبيعات 2025 + مبيعات 2026</div></div>
-  <div class="stat"><div class="label">فترة التخطيط</div><div class="value" id="planningTotal">9 أشهر</div><div class="note">مدة الشحن + مدة التغطية</div><div class="toolbar-left" style="margin-top:10px"><label>الشحن <input id="shippingMonths" type="number" min="0" max="36" step="1" value="3" style="width:72px"></label><label>التغطية <input id="coverageMonths" type="number" min="1" max="60" step="1" value="6" style="width:72px"></label></div></div>
+<header><h1>كنارة للطلبات</h1><p>إدارة طلبات قطع الغيار وحساب الاحتياج والفرز والتصفية والتصدير.</p></header>
+<div class="wrap">
+<section class="panel">
+<div class="panel-title">⚙️ إعدادات التخطيط</div>
+<div class="settings">
+<div><label for="plan">فترة التخطيط (شهر)</label><input id="plan" type="number" min="0" step="1" value="10"></div>
+<div><label for="ship">مدة الشحن (شهر)</label><input id="ship" type="number" min="0" step="1" value="5"></div>
+<div><label for="cover">تغطية الشحن (شهر)</label><input id="cover" type="number" min="0" step="1" value="5"></div>
+<div><label for="months26">عدد أشهر المبيعات المحتسبة لعام 2026</label><input id="months26" type="number" min="1" max="12" step="1" value="10"></div>
+</div>
+<div class="help">طريقة الحساب: متوسط المبيعات الشهرية = متوسط (مبيعات 2025 ÷ 12) و(مبيعات 2026 ÷ عدد أشهر 2026 المحتسبة). الاحتياج = متوسط المبيعات الشهرية × (فترة التخطيط + مدة الشحن + تغطية الشحن) − الكمية الحالية − الكمية تحت الطلب. إذا كانت النتيجة سالبة يعرض البرنامج صفرًا. يمكنك تغيير الإعدادات في أي وقت.</div>
+</section>
+<div class="stats">
+<div class="stat"><small>عدد القطع</small><strong id="statRows">0</strong></div>
+<div class="stat"><small>إجمالي الكمية الحالية</small><strong id="statStock">0</strong></div>
+<div class="stat"><small>إجمالي الكمية تحت الطلب</small><strong id="statOrder">0</strong></div>
+<div class="stat"><small>إجمالي الوحدات المقترح طلبها</small><strong id="statNeed">0</strong></div>
+<div class="stat"><small>عدد الأصناف التي تحتاج طلبًا</small><strong id="statNeedLines">0</strong></div>
+</div>
+<section class="panel">
+<div class="actions">
+<button id="addRow">＋ إضافة صف</button>
+<input id="searchBox" type="text" placeholder="بحث برقم القطعة أو الاسم..." style="max-width:260px" aria-label="بحث وتصفية">
+<button class="secondary" id="exportExcel">تصدير Excel</button>
+<button class="secondary" id="exportPdf">تصدير PDF</button>
+<button class="secondary" id="exportJson">نسخة احتياطية JSON</button>
+<button class="warn" id="clearData">مسح البيانات</button>
+<span class="badge">الحساب تلقائي</span>
+</div>
+<div class="help">يمكنك تعديل البيانات داخل الجدول مباشرة. استخدم «تصدير Excel» لفتح التقرير في Excel، أو «تصدير PDF» لحفظ نسخة مرتبة للطباعة أو المشاركة.</div>
 </section>
 <section class="panel">
-  <div class="toolbar"><div><strong>جدول القطع</strong><div class="sub">يمكنك حفظ نسخة من الجدول والرجوع إليها لاحقًا</div><div class="toolbar-left" style="margin-top:8px"><select id="savedOrders" aria-label="الطلبات المحفوظة"><option value="">اختر طلبًا محفوظًا</option></select><button type="button" id="loadOrderBtn">استرجاع الطلب</button><button type="button" id="deleteSavedBtn">حذف النسخة المحفوظة</button></div></div><div class="toolbar-left"><input id="search" class="search" placeholder="ابحث برقم القطعة أو الاسم…"><select id="filter"><option value="all">كل القطع</option><option value="need">تحتاج إلى طلب</option><option value="safe">لا تحتاج إلى طلب</option></select></div></div>
-  <div class="tablewrap"><table><thead><tr><th>الرقم التسلسلي</th><th>رقم القطعة</th><th>الرقم البديل</th><th>اسم القطعة</th><th>الكمية الحالية</th><th>الكمية تحت الطلب</th><th>مبيعات 2025</th><th>مبيعات 2026</th><th>إجمالي المبيعات</th><th>الكمية المطلوبة</th><th>إجراء</th></tr></thead><tbody id="tableBody"></tbody></table><div id="empty" class="empty" hidden>لا توجد قطع مطابقة للبحث.</div></div>
-  <div class="smallnote">طريقة الحساب الحالية: متوسط شهري موزون بين 2025 و2026، ثم توقع فترة التخطيط المحددة أعلاه، مطروحًا منه المخزون الحالي والكمية تحت الطلب. يتم تقريب النتيجة إلى الأعلى.</div>
+<div class="panel-title">📦 بيانات القطع <span class="badge" id="rowBadge">0 صف</span></div>
+<div class="table-wrap"><table id="dataTable"><thead><tr id="headRow"></tr></thead><tbody id="tbody"></tbody></table></div>
 </section>
-<footer>تُحفظ البيانات والنسخ داخل هذا المتصفح فقط. احتفظ بنسخة Excel خارجية احتياطية، لأن التخزين المحلي ليس قاعدة بيانات مشتركة بين الأجهزة.</footer>
-</main>
-<main id="suppliersView" class="view-section">
-<section class="panel"><div class="toolbar"><div><strong>عروض أسعار الموردين</strong><div class="sub">استيراد عروض الأسعار ومطابقتها مع الكميات المطلوبة في تنظيم الطلبات</div></div><div class="toolbar-left"><button type="button" class="primary" id="newSupplierBtn">＋ عرض سعر جديد</button><button type="button" id="exportSupplierBtn">⇩ تصدير العرض إلى Excel</button><button type="button" id="printSupplierBtn">⇩ طباعة / PDF</button></div></div>
-<div class="supplier-toolbar"><input id="supplierName" type="text" placeholder="اسم المورد"><input id="supplierDate" type="date" aria-label="تاريخ العرض"><label class="filelabel">⇧ استيراد Excel / CSV / PDF<input id="supplierFile" type="file" accept=".xlsx,.xls,.csv,.pdf,application/pdf,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" hidden></label><select id="supplierArchive"><option value="">العروض المحفوظة</option></select><button type="button" id="saveSupplierBtn">حفظ العرض</button><button type="button" id="deleteSupplierBtn">حذف العرض المحفوظ</button></div>
-<div class="supplier-summary"><div class="stat"><div class="label">عدد البنود</div><div class="value" id="supplierLineCount">0</div></div><div class="stat"><div class="label">بنود مطابقة</div><div class="value" id="supplierMatchedCount">0</div></div><div class="stat"><div class="label">تحتاج مراجعة</div><div class="value" id="supplierUnmatchedCount">0</div></div><div class="stat"><div class="label">إجمالي العرض (USD)</div><div class="value" id="supplierTotal">$0.00</div></div></div>
-<div class="tablewrap"><table class="supplier-table"><thead><tr><th>الرقم التسلسلي</th><th>رقم القطعة</th><th>اسم القطعة</th><th>الكمية المطلوبة</th><th>كمية المورد</th><th>السعر (USD $)</th><th>المجموع (USD $)</th><th>التجهيز (أيام)</th><th>المطابقة</th><th>إجراء</th></tr></thead><tbody id="supplierBody"></tbody></table><div class="empty" id="supplierEmpty">لا يوجد عرض سعر حالي. ارفع ملف المورد للبدء.</div></div>
-<div class="tip supplier-note">تُطابق القطع أولًا برقم القطعة ثم بالرقم البديل. القطع غير المطابقة تُميّز للمراجعة ولا تُضاف تلقائيًا إلى تنظيم الطلبات. استيراد PDF يعتمد على قراءة النص؛ ملفات PDF المصورة قد تحتاج إلى OCR، وستظهر رسالة توضح ذلك إذا تعذر استخراج البيانات.</div></section>
-</main>
+<footer>تُحفظ البيانات محليًا داخل هذا المتصفح تلقائيًا. استخدم «نسخة احتياطية JSON» للاحتفاظ بنسخة أو نقلها إلى جهاز آخر.</footer>
 </div>
-<div class="modalback" id="modalBack"><div class="modal"><h2 id="modalTitle">إضافة قطعة</h2><form id="partForm"><div class="formgrid">
-<div class="field"><label>رقم القطعة *</label><input name="part" required></div><div class="field"><label>الرقم البديل</label><input name="alt"></div>
-<div class="field"><label>اسم القطعة *</label><input name="name" required></div><div class="field"><label>الكمية الحالية</label><input name="stock" type="number" min="0" step="1" value="0"></div>
-<div class="field"><label>الكمية تحت الطلب</label><input name="onOrder" type="number" min="0" step="1" value="0"></div><div class="field"><label>مبيعات 2025</label><input name="sales25" type="number" min="0" step="1" value="0"></div>
-<div class="field"><label>مبيعات 2026 حتى الآن</label><input name="sales26" type="number" min="0" step="1" value="0"></div>
-</div><div class="tip">الكمية المطلوبة تُحسب تلقائيًا من المبيعات والمخزون والكمية تحت الطلب وفترة التخطيط، ولا تحتاج إلى إدخالها يدويًا.</div><div class="modalactions"><button class="primary" type="submit">حفظ</button><button type="button" id="cancelBtn">إلغاء</button></div></form></div></div>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script>
-const KEY='tanzeem-talabat-demo-v1';
-const ARCHIVE_KEY='tanzeem-talabat-archives-v1';
-const PLAN_KEY='tanzeem-talabat-planning-v1';
-const LANG_KEY='tanzeem-talabat-language-v1';
-let language=localStorage.getItem(LANG_KEY)==='en'?'en':'ar';
-const translations={
- 'تنظيم الطلبات':'Order Organizer','إدارة احتياج قطع الغيار وتخطيط المشتريات':'Spare Parts Demand & Purchasing Planner','＋ إضافة قطعة':'＋ Add Part','حفظ الجدول كامل':'Save Full Table','حفظ الحالي وبدء طلب جديد':'Save & Start New Order','حذف الجدول الحالي':'Clear Current Table','⇧ استيراد Excel / CSV':'⇧ Import Excel / CSV','⇩ تصدير Excel':'⇩ Export Excel','⇩ تصدير PDF':'⇩ Export PDF',
- 'إجمالي القطع':'Total Parts','عدد الأصناف المسجلة':'Registered items','قطع تحتاج إلى طلب':'Parts to Order','حسب التوقع الحالي':'Based on current forecast','إجمالي الكمية المقترحة':'Total Suggested Quantity','وحدة من قطع الغيار':'Spare parts units','إجمالي المبيعات للسنتين':'Total Sales for Both Years','مبيعات 2025 + مبيعات 2026':'2025 sales + 2026 sales','فترة التخطيط':'Planning Period','مدة الشحن + مدة التغطية':'Shipping time + coverage','الشحن':'Shipping','التغطية':'Coverage','جدول القطع':'Parts Table','يمكنك حفظ نسخة من الجدول والرجوع إليها لاحقًا':'Save a copy of the table and restore it later','اختر طلبًا محفوظًا':'Select a saved order','استرجاع الطلب':'Restore Order','حذف النسخة المحفوظة':'Delete Saved Copy','ابحث برقم القطعة أو الاسم…':'Search part number or name…','كل القطع':'All Parts','تحتاج إلى طلب':'Needs Order','لا تحتاج إلى طلب':'No Order Needed','الرقم التسلسلي':'No.','رقم القطعة':'Part Number','الرقم البديل':'Alternate Number','اسم القطعة':'Part Name','الكمية الحالية':'Current Stock','الكمية تحت الطلب':'On Order','مبيعات 2025':'2025 Sales','مبيعات 2026':'2026 Sales','إجمالي المبيعات':'Total Sales','الكمية المطلوبة':'Required Qty','إجراء':'Actions','طريقة الحساب الحالية: متوسط شهري موزون بين 2025 و2026، ثم توقع فترة التخطيط المحددة أعلاه، مطروحًا منه المخزون الحالي والكمية تحت الطلب. يتم تقريب النتيجة إلى الأعلى.':'Current formula: weighted monthly average of 2025 and 2026 sales, projected over the selected planning period, minus current stock and on-order quantity. Results are rounded up.','تُحفظ البيانات والنسخ داخل هذا المتصفح فقط. احتفظ بنسخة Excel خارجية احتياطية، لأن التخزين المحلي ليس قاعدة بيانات مشتركة بين الأجهزة.':'Data and saved copies are stored in this browser only. Keep an external Excel backup; local storage is not shared across devices.','إضافة قطعة':'Add Part','تعديل بيانات القطعة':'Edit Part','مبيعات 2026 حتى الآن':'2026 Sales to Date','في هذه النسخة، مبيعات 2026 تُعامل كأنها مبيعات 10 أشهر تقريبًا. سنجعل الفترة قابلة للتحديد عندما نعرف شكل ملفك الفعلي.':'In this version, 2026 sales are treated as approximately 10 months. The period can be made configurable later.','حفظ':'Save','إلغاء':'Cancel','تعديل':'Edit','حذف':'Delete'
-};
-function applyLanguage(){const en=language==='en';document.documentElement.lang=en?'en':'ar';document.documentElement.dir=en?'ltr':'rtl';$('langToggle').textContent=en?'العربية':'English';document.querySelectorAll('h1,.sub,.stat .label,.stat .note,.toolbar strong,.smallnote,footer,.field label,.tip,.modalactions button,th,button,.filelabel,select option').forEach(el=>{if(el.id==='menuToggle'||el.id==='closeSidebar'||el.id==='langToggle')return;if(el.matches('button')&&el.querySelector('span'))return;if(el.matches('.filelabel')&&el.querySelector('input[type=file]')){const input=el.querySelector('input[type=file]');const original=(el.dataset.arText||el.childNodes[0]?.textContent||'').trim();if(!el.dataset.arText)el.dataset.arText=original;if(en&&translations[original])el.childNodes[0].textContent=translations[original];else if(!en)el.childNodes[0].textContent=el.dataset.arText;return;}if(!el.dataset.arText)el.dataset.arText=el.textContent;const original=el.dataset.arText.trim();if(en){const translated=translations[original];if(translated)el.textContent=translated;}else{el.textContent=el.dataset.arText;}});$('search').placeholder=en?'Search part number or name…':'ابحث برقم القطعة أو الاسم…';$('empty').textContent=en?'No matching parts found.':'لا توجد قطع مطابقة للبحث.';document.querySelectorAll('.field input').forEach(i=>{if(i.name==='part')i.placeholder=en?'Part number':'';});render();}
-document.getElementById('langToggle').addEventListener('click',()=>{language=language==='ar'?'en':'ar';try{localStorage.setItem(LANG_KEY,language);}catch(e){}applyLanguage();});
-function translatePlanningLabels(){document.querySelectorAll('.stat .toolbar-left label').forEach(el=>{const node=el.firstChild;if(!node||node.nodeType!==3)return;const current=node.textContent.trim();if(language==='en'){node.textContent=(current==='الشحن'?'Shipping':current==='التغطية'?'Coverage':current)+' ';}else{node.textContent=(current==='Shipping'?'الشحن':current==='Coverage'?'التغطية':current)+' ';}});}
-document.getElementById('langToggle').addEventListener('click',translatePlanningLabels);
-const seed=[
- {part:'320/A7161',alt:'',name:'LIFT PUMP',stock:4,onOrder:2,sales25:18,sales26:12},
- {part:'320/A4904',alt:'',name:'WATER PUMP',stock:1,onOrder:0,sales25:6,sales26:8},
- {part:'320/04186',alt:'',name:'GEAR PUMP',stock:9,onOrder:0,sales25:10,sales26:5},
- {part:'332/H0887',alt:'',name:'WATER PUMP',stock:0,onOrder:4,sales25:14,sales26:11},
- {part:'332/F9031',alt:'',name:'HYDRAULIC PUMP',stock:3,onOrder:0,sales25:4,sales26:7},
- {part:'30/915200',alt:'',name:'RADIATOR',stock:2,onOrder:1,sales25:8,sales26:6},
- {part:'6N1030',alt:'',name:'OIL PUMP DRIVE',stock:7,onOrder:0,sales25:5,sales26:3}
+const cols=[
+ {key:'part',label:'رقم القطعة',type:'text',wide:false},
+ {key:'alt',label:'الرقم البديل',type:'text',wide:false},
+ {key:'name',label:'اسم القطعة',type:'text',wide:true},
+ {key:'current',label:'الكمية الحالية',type:'number'},
+ {key:'onorder',label:'الكمية تحت الطلب',type:'number'},
+ {key:'sales25',label:'مبيعات 2025',type:'number'},
+ {key:'sales26',label:'مبيعات 2026',type:'number'},
+ {key:'total',label:'إجمالي المبيعات',calc:true},
+ {key:'required',label:'الكمية المطلوبة',calc:true}
 ];
-let parts=[]; let editPart=null; let archives=[];
-try { const saved=localStorage.getItem(KEY); parts=saved?JSON.parse(saved):seed; } catch(e) { parts=seed; }
-try { archives=JSON.parse(localStorage.getItem(ARCHIVE_KEY)||'[]'); if(!Array.isArray(archives)) archives=[]; } catch(e) { archives=[]; }
+let rows=[];let sortKey='',sortDir=1,filterText='';
 const $=id=>document.getElementById(id);
-let shippingMonths=3,coverageMonths=6;
-try { const plan=JSON.parse(localStorage.getItem(PLAN_KEY)||'{}'); shippingMonths=Math.max(0,Number(plan.shippingMonths??3)||0); coverageMonths=Math.max(1,Number(plan.coverageMonths??6)||1); } catch(e) {}
-function planningMonths(){return shippingMonths+coverageMonths;}
-function calc(p){ const m25=Math.max(0,Number(p.sales25)||0)/12; const elapsedMonths=Math.max(1,Math.min(12,new Date().getMonth()+1)); const m26=Math.max(0,Number(p.sales26)||0)/elapsedMonths; const monthly=m25*.4+m26*.6; return Math.max(0,Math.ceil(monthly*planningMonths()-(Number(p.stock)||0)-(Number(p.onOrder)||0))); }
-function save(){try{localStorage.setItem(KEY,JSON.stringify(parts));}catch(e){}}
-function saveArchives(){try{localStorage.setItem(ARCHIVE_KEY,JSON.stringify(archives));}catch(e){alert('تعذر حفظ النسخ؛ قد تكون مساحة التخزين ممتلئة.');}}
-function refreshArchives(){const select=$('savedOrders');const current=select.value;select.innerHTML='<option value="">اختر طلبًا محفوظًا</option>'+archives.map(a=>`<option value="${esc(a.id)}">${esc(a.name)} (${esc(a.date)})</option>`).join('');if(archives.some(a=>a.id===current))select.value=current;}
-function archiveCurrent(name){if(!parts.length){alert('الجدول الحالي فارغ.');return false;}const date=new Date();const label=name||`طلب ${date.toLocaleDateString('ar-SA')} ${date.toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'})}`;archives.unshift({id:String(Date.now()),name:label,date:date.toLocaleDateString('ar-SA'),parts:JSON.parse(JSON.stringify(parts)),shippingMonths,coverageMonths});saveArchives();refreshArchives();return true;}
-function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-function render(){const q=$('search').value.trim().toLowerCase(), filter=$('filter').value; let shown=parts.map((p,i)=>({...p,_i:i,_need:calc(p)})).filter(p=>{const match=[p.part,p.alt,p.name].some(v=>String(v||'').toLowerCase().includes(q)); return match&&(filter==='all'||(filter==='need'?p._need>0:p._need===0));});
- $('tableBody').innerHTML=shown.map(p=>`<tr><td class="num">${p._i+1}</td><td><span class="part">${esc(p.part)}</span></td><td>${esc(p.alt||'—')}</td><td>${esc(p.name)}</td><td class="num">${Number(p.stock)||0}</td><td class="num">${Number(p.onOrder)||0}</td><td class="num">${Number(p.sales25)||0}</td><td class="num">${Number(p.sales26)||0}</td><td class="num">${(Number(p.sales25)||0)+(Number(p.sales26)||0)}</td><td class="need ${p._need>0?'high':''}">${p._need>0?p._need:'—'}</td><td><button class="rowbtn" data-edit="${p._i}">تعديل</button> <button class="rowbtn" data-delete="${p._i}">حذف</button></td></tr>`).join('');
- $('empty').hidden=shown.length>0; $('totalParts').textContent=parts.length; $('needParts').textContent=parts.filter(p=>calc(p)>0).length; $('totalNeed').textContent=parts.reduce((s,p)=>s+calc(p),0).toLocaleString('en-US'); $('totalSales').textContent=parts.reduce((s,p)=>s+(Number(p.sales25)||0)+(Number(p.sales26)||0),0).toLocaleString('en-US'); $('planningTotal').textContent=planningMonths()+' أشهر';
+function num(v){const n=Number(String(v??'').replace(/[,٬\s]/g,'').replace(/[٫]/g,'.'));return Number.isFinite(n)?n:0}
+function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function horizon(){return Math.max(0,num($('plan').value))+Math.max(0,num($('ship').value))+Math.max(0,num($('cover').value))}
+function monthly(r){const a=num(r.sales25)/12,b=num(r.sales26)/Math.max(1,num($('months26').value));return (a+b)/2}
+function total(r){return num(r.sales25)+num(r.sales26)}
+function required(r){return Math.max(0,Math.ceil(monthly(r)*horizon()-num(r.current)-num(r.onorder)))}
+function val(r,k){if(k==='total')return total(r);if(k==='required')return required(r);return r[k]??''}
+function renderHead(){
+ $('headRow').innerHTML='<th>#</th>'+cols.map(c=>`<th class="sort" data-sort="${c.key}">${c.label} ${sortKey===c.key?(sortDir===1?'▲':'▼'):'↕'}</th>`).join('');
+ document.querySelectorAll('[data-sort]').forEach(th=>th.onclick=()=>{if(sortKey===th.dataset.sort)sortDir*=-1;else{sortKey=th.dataset.sort;sortDir=1}render()});
 }
-function updatePlanning(){shippingMonths=Math.min(36,Math.max(0,Math.floor(Number($('shippingMonths').value)||0)));coverageMonths=Math.min(60,Math.max(1,Math.floor(Number($('coverageMonths').value)||1)));$('shippingMonths').value=shippingMonths;$('coverageMonths').value=coverageMonths;try{localStorage.setItem(PLAN_KEY,JSON.stringify({shippingMonths,coverageMonths}));}catch(e){}render();}
-$('shippingMonths').value=shippingMonths;$('coverageMonths').value=coverageMonths;$('shippingMonths').addEventListener('change',updatePlanning);$('coverageMonths').addEventListener('change',updatePlanning);
-$('saveTableBtn').addEventListener('click',()=>{const name=prompt('اكتب اسمًا لهذه النسخة حتى تتمكن من الرجوع إليها لاحقًا:','طلب '+new Date().toLocaleDateString('ar-SA'));if(name===null)return;if(archiveCurrent(name.trim()||undefined))alert('تم حفظ نسخة كاملة من الجدول. يمكنك استرجاعها من قائمة الطلبات المحفوظة.');});
-$('newOrderBtn').addEventListener('click',()=>{if(!confirm('سيتم حفظ الجدول الحالي كنسخة يمكن استرجاعها لاحقًا، ثم تفريغ الجدول الحالي لبدء طلب جديد. هل تريد المتابعة؟'))return;if(!archiveCurrent())return;parts=[];save();render();alert('تم حفظ الطلب السابق وبدء جدول جديد. يمكنك استرجاع الطلب السابق من قائمة الطلبات المحفوظة.');});
-$('clearTableBtn').addEventListener('click',()=>{if(!parts.length){alert('الجدول فارغ بالفعل.');return;}if(!confirm('تحذير: سيتم حذف جميع القطع من الجدول الحالي نهائيًا. لن تُحذف النسخ المحفوظة. هل تريد المتابعة؟'))return;parts=[];save();render();alert('تم حذف جميع القطع من الجدول الحالي.');});
-$('loadOrderBtn').addEventListener('click',()=>{const a=archives.find(x=>x.id===$('savedOrders').value);if(!a){alert('اختر نسخة محفوظة أولًا.');return;}if(!confirm('سيتم استبدال الجدول الحالي ببيانات النسخة المحفوظة. احفظ الجدول الحالي أولًا إن كنت تريد الاحتفاظ به.'))return;parts=JSON.parse(JSON.stringify(a.parts));shippingMonths=Number(a.shippingMonths??3);coverageMonths=Number(a.coverageMonths??6);$('shippingMonths').value=shippingMonths;$('coverageMonths').value=coverageMonths;try{localStorage.setItem(PLAN_KEY,JSON.stringify({shippingMonths,coverageMonths}));}catch(e){}save();render();alert('تم استرجاع النسخة المحفوظة.');});
-$('deleteSavedBtn').addEventListener('click',()=>{const id=$('savedOrders').value;if(!id){alert('اختر نسخة محفوظة أولًا.');return;}const a=archives.find(x=>x.id===id);if(!a||!confirm('حذف النسخة المحفوظة «'+a.name+'» نهائيًا؟'))return;archives=archives.filter(x=>x.id!==id);saveArchives();refreshArchives();});
-function openModal(i=null){editPart=i; $('partForm').reset(); $('modalTitle').textContent=i===null?'إضافة قطعة':'تعديل بيانات القطعة'; if(i!==null){const p=parts[i]; for(const k of ['part','alt','name','stock','onOrder','sales25','sales26']) $('partForm').elements[k].value=p[k]??'';} $('modalBack').classList.add('show');}
-function closeModal(){$('modalBack').classList.remove('show');}
-$('addBtn').addEventListener('click',()=>openModal()); $('cancelBtn').addEventListener('click',closeModal); $('modalBack').addEventListener('click',e=>{if(e.target===$('modalBack'))closeModal();});
-$('partForm').addEventListener('submit',e=>{e.preventDefault();const f=new FormData(e.target);const p={part:f.get('part').trim(),alt:f.get('alt').trim(),name:f.get('name').trim(),stock:+f.get('stock')||0,onOrder:+f.get('onOrder')||0,sales25:+f.get('sales25')||0,sales26:+f.get('sales26')||0};const duplicate=parts.findIndex((x,j)=>x.part.toLowerCase()===p.part.toLowerCase()&&j!==editPart);if(duplicate>=0){alert('رقم القطعة موجود بالفعل. عدّل القطعة الموجودة بدل تكرارها.');return;}if(editPart===null)parts.push(p);else parts[editPart]=p;save();render();closeModal();});
-$('tableBody').addEventListener('click',e=>{const ed=e.target.closest('[data-edit]'),del=e.target.closest('[data-delete]');if(ed)openModal(+ed.dataset.edit);if(del){const i=+del.dataset.delete;const p=parts[i];if(p&&confirm(`تأكيد حذف القطعة؟\n\nرقم القطعة: ${p.part}\nاسم القطعة: ${p.name}\n\nلا يمكن التراجع عن هذا الحذف.`)){parts.splice(i,1);save();render();}}});
-$('search').addEventListener('input',render);$('filter').addEventListener('change',render);
-function parseCSV(text){const rows=[];let row=[],cell='',quoted=false;for(let i=0;i<text.length;i++){const c=text[i],n=text[i+1];if(c==='"'&&quoted&&n==='"'){cell+='"';i++;}else if(c==='"'){quoted=!quoted;}else if((c===','||c===';'||c==='\t')&&!quoted){row.push(cell.trim());cell='';}else if((c==='\n'||c==='\r')&&!quoted){if(c==='\r'&&n==='\n')i++;row.push(cell.trim());if(row.some(x=>x!==''))rows.push(row);row=[];cell='';}else cell+=c;}row.push(cell.trim());if(row.some(x=>x!==''))rows.push(row);return rows;}
-function norm(s){return String(s||'').trim().toLowerCase().replace(/[\s_\-]+/g,'');}
- $('fileInput').addEventListener('change',async e=>{return;});
- $('exportBtn').addEventListener('click',()=>{const headers=['الرقم التسلسلي','رقم القطعة','الرقم البديل','اسم القطعة','الكمية الحالية','الكمية تحت الطلب','مبيعات 2025','مبيعات 2026','إجمالي المبيعات للسنتين','الكمية المطلوبة'];const rows=parts.map((p,i)=>[i+1,p.part,p.alt,p.name,p.stock,p.onOrder,p.sales25,p.sales26,(Number(p.sales25)||0)+(Number(p.sales26)||0),calc(p)]);const escX=v=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');const html='<html><head><meta charset="UTF-8"></head><body><table dir="rtl" border="1"><thead><tr>'+headers.map(h=>'<th>'+escX(h)+'</th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+r.map(v=>'<td>'+escX(v)+'</td>').join('')+'</tr>').join('')+'</tbody></table></body></html>';const blob=new Blob(['\uFEFF',html],{type:'application/vnd.ms-excel;charset=utf-8;'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='تنظيم-الطلبات.xls';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);});
-$('pdfBtn').addEventListener('click',()=>{window.print();});
-const SUPPLIER_KEY='tanzeem-talabat-supplier-offers-v1';let supplierOffers=[];let supplierLines=[];let currentSupplierOfferId='';
-try{supplierOffers=JSON.parse(localStorage.getItem(SUPPLIER_KEY)||'[]');if(!Array.isArray(supplierOffers))supplierOffers=[];}catch(e){supplierOffers=[];}
-function saveSupplierOffers(){try{localStorage.setItem(SUPPLIER_KEY,JSON.stringify(supplierOffers));}catch(e){alert('تعذر حفظ عروض الموردين. قد تكون مساحة التخزين ممتلئة. صدّر العرض للاحتفاظ بنسخة.');}}
-function supplierNorm(v){return String(v??'').toLowerCase().replace(/[\s\-_.\/\\]+/g,'').trim();}
-function supplierMatch(part,alt){let p=parts.find(x=>supplierNorm(x.part)===supplierNorm(part));if(!p&&alt)p=parts.find(x=>supplierNorm(x.part)===supplierNorm(alt)||supplierNorm(x.alt)===supplierNorm(alt)||supplierNorm(x.alt)===supplierNorm(part));if(!p&&part)p=parts.find(x=>supplierNorm(x.alt)===supplierNorm(part));return p||null;}
-function supplierRender(){const body=$('supplierBody');body.innerHTML=supplierLines.map((l,i)=>`<tr><td>${i+1}</td><td><input data-sline="${i}" data-key="part" value="${esc(l.part)}" style="width:130px"></td><td><input data-sline="${i}" data-key="name" value="${esc(l.name)}" style="width:190px"></td><td class="num">${l.requiredQty??0}</td><td><input data-sline="${i}" data-key="supplierQty" type="number" min="0" step="1" value="${Number(l.supplierQty)||0}" style="width:90px"></td><td><input data-sline="${i}" data-key="price" type="number" min="0" step="0.0001" value="${Number(l.price)||0}" style="width:110px"></td><td class="num">$${((Number(l.supplierQty)||0)*(Number(l.price)||0)).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</td><td><input data-sline="${i}" data-key="days" type="number" min="0" step="1" value="${Number(l.days)||0}" style="width:80px"></td><td><span class="status-tag ${l.matched?'matched':'unmatched'}">${l.matched?'مطابقة':'تحتاج مراجعة'}</span></td><td><button type="button" class="rowbtn" data-sdelete="${i}">حذف</button></td></tr>`).join('');$('supplierEmpty').hidden=supplierLines.length>0;$('supplierLineCount').textContent=supplierLines.length;$('supplierMatchedCount').textContent=supplierLines.filter(l=>l.matched).length;$('supplierUnmatchedCount').textContent=supplierLines.filter(l=>!l.matched).length;const total=supplierLines.reduce((s,l)=>s+(Number(l.supplierQty)||0)*(Number(l.price)||0),0);$('supplierTotal').textContent='$'+total.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
-function supplierRefreshArchives(){const sel=$('supplierArchive'),old=sel.value;sel.innerHTML='<option value="">العروض المحفوظة</option>'+supplierOffers.map(o=>`<option value="${esc(o.id)}">${esc(o.supplier||'مورد غير مسمى')} — ${esc(o.date||'بدون تاريخ')}</option>`).join('');if(supplierOffers.some(o=>o.id===old))sel.value=old;}
-function supplierLoadOffer(o){currentSupplierOfferId=o.id;supplierLines=JSON.parse(JSON.stringify(o.lines||[]));$('supplierName').value=o.supplier||'';$('supplierDate').value=o.date||'';supplierRender();}
-function supplierReadRows(rows){if(!rows||rows.length<2)throw new Error('لم أجد جدولًا يحتوي على عناوين وأصناف.');const norm=s=>String(s??'').toLowerCase().replace(/[\s_\-./\\()[\]]+/g,'').trim();const aliases={part:['partnumber','partno','part#','itemnumber','itemnumber2','itemno','رقمالقطعة','رقمالصنف','رقمالقطعه','part'],alt:['alternatenumber','alternatepartnumber','altpartno','الرقمالبديل'],name:['description','partname','itemdescription','اسم القطعة','اسمالقطعة','الوصف','name'],qty:['quantity','qty','orderqty','supplierqty','الكمية','كميةالمورد','الكميةالموردة'],price:['unitprice','unitcost','priceeach','price','سعرالوحدة','السعر'],amount:['amount','linetotal','extendedprice','total','المجموع','الإجمالي'],days:['days','deliverydays','leadtime','التجهيز','مدةالتجهيز','مدةالتوريد']};let headerIndex=-1,ix={};for(let ri=0;ri<Math.min(rows.length,30);ri++){const hs=(rows[ri]||[]).map(norm);const p=hs.findIndex(h=>aliases.part.some(a=>h.includes(norm(a))));if(p<0)continue;headerIndex=ri;for(const k of Object.keys(aliases))ix[k]=hs.findIndex(h=>aliases[k].some(a=>h.includes(norm(a))));break;}if(headerIndex<0)throw new Error('لم أجد عمود رقم القطعة في أول 30 صفًا. استخدم عنوانًا مثل Part Number أو Item Number2.');const out=[];for(const r of rows.slice(headerIndex+1)){const part=String(r[ix.part]??'').trim();if(!part)continue;const alt=ix.alt>=0?String(r[ix.alt]??'').trim():'';const match=supplierMatch(part,alt);const num=v=>{if(typeof v==='number')return v;let s=String(v??'').replace(/\s/g,'');if(s.includes(',')&&s.includes('.'))s=s.lastIndexOf(',')>s.lastIndexOf('.')?s.replace(/\./g,'').replace(',','.'):s.replace(/,/g,'');else if(s.includes(','))s=s.replace(',','.');return Number(s.replace(/[^0-9.\-]/g,''))||0;};const qty=ix.qty>=0?num(r[ix.qty]):0,price=ix.price>=0?num(r[ix.price]):(ix.amount>=0&&qty?num(r[ix.amount])/qty:0);out.push({part,alt,name:(ix.name>=0?String(r[ix.name]??'').trim():'')||(match?.name||''),requiredQty:match?calc(match):0,supplierQty:qty,price,days:ix.days>=0?num(r[ix.days]):30,matched:!!match});}if(!out.length)throw new Error('تم العثور على عنوان رقم القطعة لكن لم أجد صفوفًا تحتوي على أرقام قطع تحته.');supplierLines=out;supplierRender();}
-function supplierSaveCurrent(){if(!supplierLines.length){alert('لا يوجد عرض سعر لحفظه.');return;}const supplier=$('supplierName').value.trim();if(!supplier){alert('اكتب اسم المورد قبل الحفظ.');$('supplierName').focus();return;}const date=$('supplierDate').value||new Date().toISOString().slice(0,10);const id=currentSupplierOfferId||String(Date.now());const offer={id,supplier,date,lines:JSON.parse(JSON.stringify(supplierLines)),updatedAt:new Date().toISOString()};const idx=supplierOffers.findIndex(o=>o.id===id);if(idx>=0)supplierOffers[idx]=offer;else supplierOffers.unshift(offer);currentSupplierOfferId=id;saveSupplierOffers();supplierRefreshArchives();$('supplierArchive').value=id;alert('تم حفظ عرض السعر.');}
-$('menuToggle').addEventListener('click',()=>{$('sidebar').classList.add('open');$('sidebarBackdrop').classList.add('open');});function closeSidebar(){$('sidebar').classList.remove('open');$('sidebarBackdrop').classList.remove('open');}$('closeSidebar').addEventListener('click',closeSidebar);$('sidebarBackdrop').addEventListener('click',closeSidebar);
-document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-view]').forEach(x=>x.classList.toggle('active',x===b));const isSuppliers=b.dataset.view==='suppliers';document.body.classList.toggle('suppliers-active',isSuppliers);$('ordersView').classList.toggle('active',!isSuppliers);$('suppliersView').classList.toggle('active',isSuppliers);$('pageTitle').textContent=isSuppliers?'الموردين':'تنظيم الطلبات';$('pageSubtitle').textContent=isSuppliers?'إدارة عروض الأسعار ومطابقتها مع احتياج قطع الغيار':'إدارة احتياج قطع الغيار وتخطيط المشتريات';document.title=isSuppliers?'الموردين':'تنظيم الطلبات';closeSidebar();}));
-$('newSupplierBtn').addEventListener('click',()=>{currentSupplierOfferId='';supplierLines=[];$('supplierName').value='';$('supplierDate').value=new Date().toISOString().slice(0,10);$('supplierArchive').value='';$('supplierFile').value='';supplierRender();$('supplierName').focus();$('supplierName').scrollIntoView({behavior:'smooth',block:'center'});});
-$('saveSupplierBtn').addEventListener('click',supplierSaveCurrent);$('supplierArchive').addEventListener('change',()=>{const o=supplierOffers.find(x=>x.id===$('supplierArchive').value);if(o)supplierLoadOffer(o);});
-$('deleteSupplierBtn').addEventListener('click',()=>{const id=$('supplierArchive').value;if(!id){alert('اختر عرضًا محفوظًا أولًا.');return;}const o=supplierOffers.find(x=>x.id===id);if(!confirm('حذف عرض المورد '+(o?.supplier||'')+'؟'))return;supplierOffers=supplierOffers.filter(x=>x.id!==id);saveSupplierOffers();supplierRefreshArchives();if(currentSupplierOfferId===id){currentSupplierOfferId='';supplierLines=[];supplierRender();}});
-$('supplierBody').addEventListener('change',e=>{const i=Number(e.target.dataset.sline),key=e.target.dataset.key;if(!Number.isInteger(i)||!key||!supplierLines[i])return;const line=supplierLines[i];line[key]=['supplierQty','price','days'].includes(key)?Math.max(0,Number(e.target.value)||0):e.target.value;if(key==='part'){const match=supplierMatch(line.part,line.alt);line.matched=!!match;line.requiredQty=match?calc(match):0;if(match&&!line.name)line.name=match.name;}supplierRender();});$('supplierBody').addEventListener('click',e=>{const b=e.target.closest('[data-sdelete]');if(b){supplierLines.splice(Number(b.dataset.sdelete),1);supplierRender();}});
- $('supplierFile').addEventListener('change',async e=>{const file=e.target.files[0];if(!file)return;try{let rows;if(/\.csv$/i.test(file.name)){rows=parseCSV(await file.text());}else if(/\.pdf$/i.test(file.name)){if(!window.pdfjsLib)throw new Error('تعذر تحميل قارئ PDF. تأكد من الاتصال بالإنترنت.');if(!window.Tesseract)throw new Error('تعذر تحميل قارئ OCR. تأكد من الاتصال بالإنترنت.');pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';const pdf=await pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise;const ocrLines=[];for(let p=1;p<=pdf.numPages;p++){const page=await pdf.getPage(p),viewport=page.getViewport({scale:2.5}),canvas=document.createElement('canvas'),ctx=canvas.getContext('2d');canvas.width=viewport.width;canvas.height=viewport.height;await page.render({canvasContext:ctx,viewport}).promise;const result=await Tesseract.recognize(canvas,'eng');for(const line of (result.data.lines||[])){const text=String(line.text||'').trim();if(text)ocrLines.push(text);}canvas.width=0;canvas.height=0;}const parsed=[];for(const line of ocrLines){const m=line.match(/^\s*(\d{1,3})\s+([A-Z0-9][A-Z0-9./-]{3,})\s+(.+?)\s+NR\s+(\d+(?:[.,]\d+)?)\s+([\d.,]+)\s+([\d.,]+)\s+(\d{1,3})\s*$/i);if(!m)continue;const amount=s=>{let v=String(s||'').replace(/\s/g,'');if(v.includes(',')&&v.includes('.'))v=v.lastIndexOf(',')>v.lastIndexOf('.')?v.replace(/\./g,'').replace(',','.'):v.replace(/,/g,'');else if(v.includes(','))v=v.replace(',','.');return Number(v)||0;};parsed.push([m[1],m[2],m[3].replace(/\*\*/g,'').trim(),m[4],m[5],m[6],m[7]]);}if(!parsed.length)throw new Error('تم تشغيل OCR لكن لم تُكتشف صفوف موثوقة. جرّب نسخة أوضح أو Excel/CSV من المورد.');rows=[['Item','Part Number','Description','Quantity','Unit Price','Amount','Days'],...parsed.map(r=>[r[0],r[1],r[2],r[3],r[4],r[5],r[6]])];}else{if(!window.XLSX)throw new Error('تعذر تحميل قارئ Excel.');const wb=XLSX.read(await file.arrayBuffer(),{type:'array'});const sheet=wb.Sheets[wb.SheetNames[0]];rows=XLSX.utils.sheet_to_json(sheet,{header:1,raw:false,defval:''});}supplierReadRows(rows);currentSupplierOfferId='';alert('تم استيراد البنود. راجع أرقام القطع والكميات والأسعار وحالة المطابقة يدويًا قبل حفظ العرض، لأن OCR قد يخطئ في قراءة الأرقام.');}catch(err){alert('تعذر استيراد العرض: '+err.message);}finally{e.target.value='';}});
-$('exportSupplierBtn').addEventListener('click',()=>{if(!supplierLines.length){alert('لا توجد بنود لتصديرها.');return;}const rows=[['الرقم التسلسلي','رقم القطعة','اسم القطعة','الكمية المطلوبة','كمية المورد','السعر (USD)','المجموع (USD)','التجهيز (أيام)','حالة المطابقة'],...supplierLines.map((l,i)=>[i+1,l.part,l.name,l.requiredQty,l.supplierQty,l.price,(Number(l.supplierQty)||0)*(Number(l.price)||0),l.days,l.matched?'مطابقة':'تحتاج مراجعة'])];const ws=XLSX.utils.aoa_to_sheet(rows),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Supplier Offer');XLSX.writeFile(wb,`عرض-${$('supplierName').value.trim()||'المورد'}.xlsx`);});$('printSupplierBtn').addEventListener('click',()=>window.print());
-// Robust import handler: detect the real header row even when the workbook has title rows above it.
-document.getElementById('fileInput').addEventListener('change',async function(e){
- const file=e.target.files&&e.target.files[0];if(!file)return;
- e.stopImmediatePropagation();
- try{
-  let rows,preferred='CSV';
-  if(/\.csv$/i.test(file.name)) rows=parseCSV(await file.text());
-  else {if(!window.XLSX)throw new Error('تعذر تحميل مكتبة Excel. تأكد من اتصال الإنترنت.');const wb=XLSX.read(await file.arrayBuffer(),{type:'array'});preferred=wb.SheetNames.find(n=>norm(n)==='seals')||wb.SheetNames[0];rows=XLSX.utils.sheet_to_json(wb.Sheets[preferred],{header:1,raw:false,defval:''});const orderSheet=wb.SheetNames.find(n=>norm(n)==='onorder');if(orderSheet){const orderRows=XLSX.utils.sheet_to_json(wb.Sheets[orderSheet],{header:1,raw:false,defval:''});const hn=s=>String(s??'').toLowerCase().replace(/[\s_\-./\\]+/g,'').replace(/[()\[\]]/g,'').trim();let hi=-1,pi=-1,qi=-1;for(let ri=0;ri<Math.min(orderRows.length,30);ri++){const hs=(orderRows[ri]||[]).map(hn);const p=hs.findIndex(h=>['itemnumber2','itemnumber','itemnum','itemno','partnumber','partno','part','رقمالقطعة'].includes(h));if(p>=0){hi=ri;pi=p;qi=hs.findIndex(h=>['quantity','qty','onorder','orderedqty','الكمية'].includes(h));break;}}if(hi>=0&&qi>=0){const pending={};for(const rr of orderRows.slice(hi+1)){const pn=String(rr[pi]??'').trim();if(!pn)continue;const key=pn.toUpperCase().replace(/[\s\-_.\/\\]+/g,'');const raw=String(rr[qi]??'').replace(/,/g,'');pending[key]=(pending[key]||0)+(Number(raw)||0);}rows._pendingByPart=pending;}else{rows._pendingReadError='لم يتم العثور على عمودي Item num وQuantity في ورقة ON ORDER.';}}
-  }
-  if(!rows||!rows.length)throw new Error('الملف فارغ.');
-  const normalizeHeader=s=>String(s??'').toLowerCase().replace(/[\s_\-./\\]+/g,'').replace(/[()\[\]]/g,'').trim();
-  const aliases={part:['partnumber','partno','part#','itemnumber2','itemnumber','itemno','item#','رقمالقطعة','رقمالصنف','رقمالقطعه','part'],alt:['alternatenumber','alternatepartnumber','altpartno','الرقمالبديل'],name:['description','partname','itemdescription','اسم القطعة','اسمالقطعة','الوصف','name'],stock:['availableqtytosale','currentstock','stock','onhand','الكميةالحالية','المخزون'],onOrder:['onorder','quantityonorder','orderedqty','الكميةتحتالطلب'],sales25:['sales2025','2025sales','مبيعات2025','totalsalesreturn2025','salesreturn2025','2025'],sales26:['sales2026','2026sales','مبيعات2026','totalsalesreturn2026','salesreturn2026','2026']};
-  let headerIndex=-1,ix={};
-  for(let ri=0;ri<Math.min(rows.length,30);ri++){const hs=(rows[ri]||[]).map(normalizeHeader);const p=hs.findIndex(h=>aliases.part.some(a=>h===normalizeHeader(a)||h.includes(normalizeHeader(a))));if(p>=0){headerIndex=ri;ix={};for(const key of Object.keys(aliases))ix[key]=hs.findIndex(h=>aliases[key].some(a=>h===normalizeHeader(a)||h.includes(normalizeHeader(a))));for(let ci=0;ci<hs.length;ci++){if(hs[ci].includes('2025')&&ix.sales25<0)ix.sales25=ci;if(hs[ci].includes('2026')&&ix.sales26<0)ix.sales26=ci;}break;}}
-  if(headerIndex<0)throw new Error('لم أجد عنوان عمود رقم القطعة في أول 20 صفًا. تأكد أن الملف يحتوي على Part Number أو Item number2.');
-  let updated=0,added=0,skipped=0;
-  const partKey=v=>String(v??'').trim().toUpperCase().replace(/[\s\-_.\/\\]+/g,'');
-  for(const r of rows.slice(headerIndex+1)){const part=String(r[ix.part]??'').trim();if(!part){skipped++;continue;}const oldIndex=parts.findIndex(p=>partKey(p.part)===partKey(part));const old=oldIndex>=0?parts[oldIndex]:{};const get=(key,fallback=0)=>ix[key]>=0&&r[ix[key]]!==undefined&&String(r[ix[key]]).trim()!==''?(Number(String(r[ix[key]]).replace(/,/g,''))||0):fallback;const pendingKey=Object.keys(rows._pendingByPart||{}).find(k=>partKey(k)===partKey(part));const pending=pendingKey!==undefined?rows._pendingByPart[pendingKey]:undefined;const item={part,alt:ix.alt>=0?String(r[ix.alt]??'').trim():(old.alt||''),name:ix.name>=0?String(r[ix.name]??'').trim():(old.name||'غير محدد'),stock:get('stock',Number(old.stock)||0),onOrder:pending!==undefined?pending:get('onOrder',Number(old.onOrder)||0),sales25:get('sales25',Number(old.sales25)||0),sales26:get('sales26',Number(old.sales26)||0)};if(oldIndex>=0){parts[oldIndex]={...old,...item};updated++;}else{parts.push(item);added++;}}
-  if(!updated&&!added)throw new Error('تم العثور على عنوان رقم القطعة، لكن لم أجد صفوف بيانات تحتوي على أرقام قطع.');
-  save();render();const pendingCount=Object.keys(rows._pendingByPart||{}).length;alert('تم الاستيراد بنجاح من ورقة '+(/\.csv$/i.test(file.name)?'CSV':preferred)+'.\nتم تحديث '+updated+' قطعة وإضافة '+added+' قطعة جديدة.'+(skipped?'\nتم تجاهل '+skipped+' صفوف فارغة.':'')+'\nمبيعات 2025 و2026 تم ربطها بعناوين Total Sales-Return (2025/2026).'+(pendingCount?'\nتمت قراءة '+pendingCount+' أرقام قطع من ورقة ON ORDER ودمج كمياتها.':rows._pendingReadError?'\nتنبيه: '+rows._pendingReadError:'\nتنبيه: لم يتم العثور على ورقة ON ORDER.'));
- }catch(err){alert('تعذر استيراد الملف: '+(err&&err.message?err.message:'خطأ غير معروف'));}finally{e.target.value='';}
-},true);
-supplierRefreshArchives();$('supplierDate').value=new Date().toISOString().slice(0,10);supplierRender();refreshArchives();applyLanguage();translatePlanningLabels();render();
+function render(){
+ renderHead();
+ const filtered=rows.map((r,i)=>({r,i})).filter(x=>!filterText||cols.some(c=>String(val(x.r,c.key)).toLowerCase().includes(filterText.toLowerCase())));
+ if(sortKey) filtered.sort((a,b)=>{
+   const av=String(val(a.r,sortKey)??'').trim(), bv=String(val(b.r,sortKey)??'').trim();
+   if(!av && bv) return 1;
+   if(av && !bv) return -1;
+   return av.localeCompare(bv,'en',{numeric:true,sensitivity:'base'})*sortDir;
+ });
+ $('tbody').innerHTML=filtered.map(({r,i},displayIndex)=>`<tr><td>${displayIndex+1}</td>${cols.map(c=>{
+ let v=val(r,c.key);
+ if(c.calc)return `<td class="calculated ${c.key==='required'&&v>0?'needed':''}">${Number(v).toLocaleString('en-US')}</td>`;
+ return `<td><input data-i="${i}" data-k="${c.key}" class="${c.wide?'wide':''}" type="${c.type==='number'?'number':'text'}" ${c.type==='number'?'min="0" step="any"':''} value="${esc(v)}" aria-label="${c.label}"></td>`;
+ }).join('')}</tr>`).join('');
+ $('rowBadge').textContent=rows.length+' صف';
+ $('statRows').textContent=rows.filter(r=>Object.values(r).some(v=>String(v??'').trim()!=='')).length.toLocaleString('en-US');
+ $('statStock').textContent=rows.reduce((s,r)=>s+num(r.current),0).toLocaleString('en-US');
+ $('statOrder').textContent=rows.reduce((s,r)=>s+num(r.onorder),0).toLocaleString('en-US');
+ $('statNeed').textContent=rows.reduce((s,r)=>s+required(r),0).toLocaleString('en-US');
+ $('statNeedLines').textContent=rows.filter(r=>rowHasData(r)&&required(r)>0).length.toLocaleString('en-US');
+ $('tbody').querySelectorAll('input').forEach(inp=>{
+  inp.addEventListener('change',()=>{rows[+inp.dataset.i][inp.dataset.k]=inp.value;save();renderStatsOnly()});
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();const all=[...$('tbody').querySelectorAll('input')],idx=all.indexOf(inp);all[idx+1]?.focus()}});
+ });
+}
+function renderStatsOnly(){
+ $('statRows').textContent=rows.filter(r=>Object.values(r).some(v=>String(v??'').trim()!=='')).length.toLocaleString('en-US');
+ $('statStock').textContent=rows.reduce((s,r)=>s+num(r.current),0).toLocaleString('en-US');
+ $('statOrder').textContent=rows.reduce((s,r)=>s+num(r.onorder),0).toLocaleString('en-US');
+ $('statNeed').textContent=rows.reduce((s,r)=>s+required(r),0).toLocaleString('en-US');
+ $('statNeedLines').textContent=rows.filter(r=>rowHasData(r)&&required(r)>0).length.toLocaleString('en-US');
+ // Update calculated cells without destroying focus
+ const trRows=[...$('tbody').querySelectorAll('tr')];
+ trRows.forEach(tr=>{const inp=tr.querySelector('input');if(!inp)return;const i=+inp.dataset.i;const cells=tr.querySelectorAll('td');cells[cells.length-2].textContent=total(rows[i]).toLocaleString('en-US');cells[cells.length-1].textContent=required(rows[i]).toLocaleString('en-US');cells[cells.length-1].classList.toggle('needed',required(rows[i])>0)});
+}
+
+function pasteGridText(text,startRow=0,startCol=0){
+ let lines=text.replace(/\r/g,'').split('\n');
+ if(lines[lines.length-1]==='') lines.pop();
+ const keys=cols.filter(c=>!c.calc).map(c=>c.key);
+ if(!lines.length) return;
+
+ // When Excel supplies a single column, ignore blank lines so values do not
+ // jump down leaving empty rows between them. Preserve blank cells in real
+ // multi-column ranges because they may be intentional alignment.
+ const singleColumn = !text.includes('\t');
+ if(singleColumn) lines=lines.filter(line=>line.trim()!=='');
+ if(!lines.length) return;
+
+ ensure(startRow+lines.length);
+ lines.forEach((line,ri)=>{
+   const vals=line.split('\t');
+   vals.forEach((v,ci)=>{
+     const key=keys[startCol+ci];
+     if(key) rows[startRow+ri][key]=v.trimEnd();
+   });
+ });
+ save();
+ render();
+}
+
+function save(){try{localStorage.setItem('sparePartsPlannerV1',JSON.stringify({rows,settings:{plan:$('plan').value,ship:$('ship').value,cover:$('cover').value,months26:$('months26').value}}))}catch(e){}}
+function newRow(){return Object.fromEntries(cols.filter(c=>!c.calc).map(c=>[c.key,'']))}
+function rowHasData(r){return cols.filter(c=>!c.calc).some(c=>String(r?.[c.key]??'').trim()!=='')}
+function ensure(n){while(rows.length<n)rows.push(newRow())}
+
+// دعم اللصق المباشر من Excel داخل خلايا الجدول: كل سطر في صف، وكل Tab في عمود.
+document.addEventListener('paste',e=>{
+ const input=e.target;
+ if(!input || !input.matches('#dataTable tbody input')) return;
+ const text=(e.clipboardData || window.clipboardData).getData('text');
+ if(!text || (!text.includes('\n') && !text.includes('\r') && !text.includes('\t'))) return;
+ e.preventDefault();
+ const rowIndex=Number(input.dataset.i)||0;
+ const editableCols=cols.filter(c=>!c.calc);
+ const colIndex=Math.max(0,editableCols.findIndex(c=>c.key===input.dataset.k));
+ pasteGridText(text,rowIndex,colIndex);
+});
+
+$('searchBox').addEventListener('input',()=>{filterText=$('searchBox').value;render()});
+$('addRow').onclick=()=>{rows.push(newRow());save();render();$('tbody tr:last-child input')?.focus()};
+['plan','ship','cover','months26'].forEach(id=>$(id).addEventListener('input',()=>{save();renderStatsOnly()}));
+$('exportExcel').onclick=()=>{
+ const tableRows=[cols.map(c=>c.label),...rows.map(r=>cols.map(c=>val(r,c.key)))];
+ const table=`<table border="1"><thead><tr>${tableRows[0].map(v=>'<th>'+excelEsc(v)+'</th>').join('')}</tr></thead><tbody>${tableRows.slice(1).map(line=>'<tr>'+line.map(v=>'<td>'+excelEsc(v)+'</td>').join('')+'</tr>').join('')}</tbody></table>`;
+ const html='<!doctype html><html><head><meta charset="utf-8"></head><body dir="rtl"><h2>تقرير تخطيط طلبات قطع الغيار</h2>'+table+'</body></html>';
+ download('spare-parts-plan.xls','\ufeff'+html,'application/vnd.ms-excel;charset=utf-8');
+};
+function excelEsc(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+$('exportPdf').onclick=()=>{
+ const dataRows=rows.filter(r=>cols.some(c=>String(val(r,c.key)??'').trim()!==''));
+ const table='<table><thead><tr>'+cols.map(c=>'<th>'+excelEsc(c.label)+'</th>').join('')+'</tr></thead><tbody>'+dataRows.map(r=>'<tr>'+cols.map(c=>'<td>'+excelEsc(val(r,c.key))+'</td>').join('')+'</tr>').join('')+'</tbody></table>';
+ const win=window.open('','_blank');
+ if(!win){alert('يرجى السماح بالنوافذ المنبثقة لتصدير PDF.');return;}
+ win.document.write('<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>تقرير قطع الغيار</title><style>body{font-family:Arial,Tahoma,sans-serif;padding:18px;color:#172b24}h1{font-size:20px;margin:0 0 8px}p{font-size:12px;color:#52665c;margin:0 0 16px}.meta{display:flex;gap:18px;margin-bottom:16px;font-size:12px}table{width:100%;border-collapse:collapse;font-size:10px}th{background:#dcecff}th,td{border:1px solid #b9c9c1;padding:5px;text-align:center;overflow-wrap:anywhere}thead{display:table-header-group}tr{break-inside:avoid}@page{size:landscape;margin:10mm}</style></head><body><h1>تقرير تخطيط طلبات قطع الغيار</h1><p>تقرير الكميات والمبيعات والاحتياج</p><div class="meta"><span>فترة التخطيط: '+excelEsc($('plan').value)+' أشهر</span><span>مدة الشحن: '+excelEsc($('ship').value)+' أشهر</span><span>تغطية الشحن: '+excelEsc($('cover').value)+' أشهر</span><span>عدد القطع: '+dataRows.length+'</span></div>'+table+'</body></html>');
+ win.document.close();
+ win.onload=()=>win.print();
+};
+$('exportJson').onclick=()=>download('spare-parts-backup.json',JSON.stringify({rows,settings:{plan:$('plan').value,ship:$('ship').value,cover:$('cover').value,months26:$('months26').value}},null,2),'application/json');
+$('clearData').onclick=()=>{if(confirm('هل تريد مسح جميع بيانات القطع؟')){rows=[];save();render()}};
+try{const saved=JSON.parse(localStorage.getItem('sparePartsPlannerV1')||'null');if(saved){rows=(saved.rows||[]).map(old=>{const r=newRow();cols.filter(c=>!c.calc).forEach(c=>{r[c.key]=old?.[c.key]??''});return r}).filter(rowHasData);if(saved.settings)Object.entries(saved.settings).forEach(([k,v])=>{if($(k))$(k).value=v})}}catch(e){}
+if(!rows.length)rows=Array.from({length:10},newRow);
+save();
+render();
 </script>
-</body>
-</html>
+</body></html>
