@@ -259,6 +259,7 @@ tr.needs-review input[data-k="reviewAlt"]{border-color:#d97757;background:#fff8f
 <label style="display:flex;align-items:center;gap:7px;margin:0;padding:8px 10px;border:1px solid #e0e2e3;border-radius:10px;background:#fff;cursor:pointer"><input id="toggleOrderPartNo" type="checkbox" checked style="width:auto;min-height:0"> إظهار رقم القطعة تحت الطلب</label>
 <label style="display:flex;align-items:center;gap:7px;margin:0;padding:8px 10px;border:1px solid #e0e2e3;border-radius:10px;background:#fff;cursor:pointer"><input id="toggleCurrentPartNo" type="checkbox" checked style="width:auto;min-height:0"> إظهار رقم قطعة الكمية الحالية</label>
 <label style="display:flex;align-items:center;gap:7px;margin:0;padding:8px 10px;border:1px solid #e0e2e3;border-radius:10px;background:#fff;cursor:pointer"><input id="toggleSalesNoor" type="checkbox" checked style="width:auto;min-height:0"> إظهار مبيعات نور</label>
+<label style="display:flex;align-items:center;gap:7px;margin:0;padding:8px 10px;border:1px solid #e0e2e3;border-radius:10px;background:#fff;cursor:pointer"><input id="toggleSalesNoorPart" type="checkbox" checked style="width:auto;min-height:0"> إظهار رقم القطعة لمبيعات نور</label>
 <label style="display:flex;align-items:center;gap:7px;margin:0;padding:8px 10px;border:1px solid #e0e2e3;border-radius:10px;background:#fff;cursor:pointer"><input id="toggleReviewAlt" type="checkbox" style="width:auto;min-height:0"> إظهار الرقم البديل للمراجعة</label>
 <button class="secondary" id="exportExcel">تصدير Excel</button>
 <button class="secondary" id="exportPdf">تصدير PDF</button>
@@ -316,6 +317,7 @@ const cols=[
  {key:'onorder',label:'الكمية تحت الطلب',type:'number'},
  {key:'sales25',label:'مبيعات 2025',type:'number'},
  {key:'sales26',label:'مبيعات 2026',type:'number'},
+ {key:'salesNoorPart',label:'رقم القطعة لمبيعات نور',type:'text',wide:false},
  {key:'salesNoor',label:'مبيعات نور',type:'number'},
  {key:'total',label:'إجمالي المبيعات',calc:true},
  {key:'required',label:'الكمية المطلوبة',calc:true},
@@ -324,7 +326,7 @@ const cols=[
  {key:'supplierQty',label:'كمية المورد',type:'number'},
  {key:'leadTime',label:'مدة التوريد',type:'number'}
 ];
-let rows=[];let sortKey='',sortDir=1,filterText='';let columnFilters={};let showAlt=true;let showOrderPartNo=true;let showCurrentPartNo=true;let showSalesNoor=true;let showReviewAlt=false;let uiLang=localStorage.getItem('kanaraUiLang')||'ar';
+let rows=[];let sortKey='',sortDir=1,filterText='';let columnFilters={};let showAlt=true;let showOrderPartNo=true;let showCurrentPartNo=true;let showSalesNoor=true;let showSalesNoorPart=true;let showReviewAlt=false;let uiLang=localStorage.getItem('kanaraUiLang')||'ar';
 const $=id=>document.getElementById(id);
 function num(v){const n=Number(String(v??'').replace(/[,٬\s]/g,'').replace(/[٫]/g,'.'));return Number.isFinite(n)?n:0}
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -333,7 +335,7 @@ function monthly(r){const a=num(r.sales25)/12,b=(num(r.sales26)+num(r.salesNoor)
 function total(r){return num(r.sales25)+num(r.sales26)+num(r.salesNoor)}
 function required(r){return Math.max(0,Math.ceil(monthly(r)*horizon()-num(r.current)-num(r.onorder)))}
 function val(r,k){if(k==='total')return total(r);if(k==='required')return required(r);return r[k]??''}
-const enCols={part:'Part Number',alt:'Alternative Number',name:'Part Name',currentPartNo:'Current Stock Part No.',current:'Current Quantity',orderPartNo:'Part Number on Order',reviewAlt:'Alternative Number (Review)',onorder:'Quantity on Order',sales25:'2025 Sales',sales26:'2026 Sales',salesNoor:'Noor Sales',total:'Total Sales',required:'Required Quantity',supplierPartNo:'Supplier Part Number',supplierPrice:'Supplier Price',supplierQty:'Supplier Quantity',leadTime:'Lead Time'};
+const enCols={part:'Part Number',alt:'Alternative Number',name:'Part Name',currentPartNo:'Current Stock Part No.',current:'Current Quantity',orderPartNo:'Part Number on Order',reviewAlt:'Alternative Number (Review)',onorder:'Quantity on Order',sales25:'2025 Sales',sales26:'2026 Sales',salesNoorPart:'Noor Sales Part Number',salesNoor:'Noor Sales',total:'Total Sales',required:'Required Quantity',supplierPartNo:'Supplier Part Number',supplierPrice:'Supplier Price',supplierQty:'Supplier Quantity',leadTime:'Lead Time'};
 function applyLanguage(){
  const en=uiLang==='en';document.documentElement.lang=en?'en':'ar';document.documentElement.dir=en?'ltr':'rtl';
  $('languageToggle').textContent=en?'العربية':'English';
@@ -343,18 +345,18 @@ function applyLanguage(){
  const labels={plan:['فترة التخطيط (شهر)','Planning Period (months)'],ship:['مدة الشحن (شهر)','Shipping Time (months)'],cover:['تغطية الشحن (شهر)','Shipping Coverage (months)'],months26:['عدد أشهر المبيعات المحتسبة لعام 2026','Months of 2026 Sales Included']};Object.entries(labels).forEach(([id,v])=>{const el=document.querySelector(`label[for="${id}"]`);if(el)el.textContent=en?v[1]:v[0]});
  const stats=[['عدد القطع','Number of Parts'],['إجمالي الكمية الحالية','Total Current Stock'],['إجمالي الكمية تحت الطلب','Total Quantity on Order'],['إجمالي الوحدات المقترح طلبها','Total Suggested Order Units'],['عدد الأصناف التي تحتاج طلبًا','Parts Requiring an Order']];document.querySelectorAll('.stat small').forEach((el,i)=>{if(stats[i])el.textContent=en?stats[i][1]:stats[i][0]});
  $('addRow').textContent=en?'＋ Add Row':'＋ إضافة صف';$('searchBox').placeholder=en?'Search part number or name...':'بحث برقم القطعة أو الاسم...';$('searchBox').setAttribute('aria-label',en?'Search and filter':'بحث وتصفية');
- const lab0=$('toggleAlt').parentElement,lab1=$('toggleOrderPartNo').parentElement,lab2=$('toggleCurrentPartNo').parentElement,lab3=$('toggleReviewAlt').parentElement;lab0.lastChild.textContent=en?' Show Alternative Number':' إظهار الرقم البديل';lab1.lastChild.textContent=en?' Show Part Number on Order':' إظهار رقم القطعة تحت الطلب';lab2.lastChild.textContent=en?' Show Current Stock Part Number':' إظهار رقم قطعة الكمية الحالية';lab3.lastChild.textContent=en?' Show Review Alternative Number':' إظهار الرقم البديل للمراجعة';const lab4=$('toggleSalesNoor').parentElement;lab4.lastChild.textContent=en?' Show Noor Sales':' إظهار مبيعات نور';
+ const lab0=$('toggleAlt').parentElement,lab1=$('toggleOrderPartNo').parentElement,lab2=$('toggleCurrentPartNo').parentElement,lab3=$('toggleReviewAlt').parentElement;lab0.lastChild.textContent=en?' Show Alternative Number':' إظهار الرقم البديل';lab1.lastChild.textContent=en?' Show Part Number on Order':' إظهار رقم القطعة تحت الطلب';lab2.lastChild.textContent=en?' Show Current Stock Part Number':' إظهار رقم قطعة الكمية الحالية';lab3.lastChild.textContent=en?' Show Review Alternative Number':' إظهار الرقم البديل للمراجعة';const lab4=$('toggleSalesNoor').parentElement;lab4.lastChild.textContent=en?' Show Noor Sales':' إظهار مبيعات نور';const lab5=$('toggleSalesNoorPart').parentElement;lab5.lastChild.textContent=en?' Show Noor Sales Part Number':' إظهار رقم القطعة لمبيعات نور';
  $('exportExcel').textContent=en?'Export Excel':'تصدير Excel';$('exportPdf').textContent=en?'Export PDF':'تصدير PDF';$('clearData').textContent=en?'Clear Data':'مسح البيانات';
  const actionHelp=document.querySelectorAll('section.panel .help');if(actionHelp[0])actionHelp[0].textContent=en?'Calculation: average monthly sales = average of (2025 sales ÷ 12) and ((2026 sales + Noor sales) ÷ included 2026 months). Required quantity = average monthly sales × (planning period + shipping time + coverage) − current quantity − quantity on order. Negative results are shown as zero.':'طريقة الحساب: متوسط المبيعات الشهرية = متوسط (مبيعات 2025 ÷ 12) و((مبيعات 2026 + مبيعات نور) ÷ عدد أشهر 2026 المحتسبة). الاحتياج = متوسط المبيعات الشهرية × (فترة التخطيط + مدة الشحن + تغطية الشحن) − الكمية الحالية − الكمية تحت الطلب. إذا كانت النتيجة سالبة يعرض البرنامج صفرًا. يمكنك تغيير الإعدادات في أي وقت.';
  if(actionHelp[1])actionHelp[1].textContent=en?'Edit data directly in the table. Use Export Excel or Export PDF to save a report.':'يمكنك تعديل البيانات داخل الجدول مباشرة. استخدم «تصدير Excel» لفتح التقرير في Excel، أو «تصدير PDF» لحفظ نسخة مرتبة للطباعة أو المشاركة.';
  $('pageInfo').textContent=en?'All rows are displayed on one page.':'تُعرض جميع الصفوف في صفحة واحدة.';
  const footer=document.querySelector('footer');if(footer)footer.textContent=en?'Data is saved automatically in this browser. All rows are displayed on one page. Paste part numbers into Current Stock Part No. to match them automatically, or paste a part number and quantity together into the appropriate column. You can also use Part Number on Order the same way.':'تُحفظ البيانات تلقائيًا داخل هذا المتصفح. يعرض الجدول جميع الصفوف في صفحة واحدة. الصق أرقام القطع في «رقم قطعة الكمية الحالية» لمطابقتها تلقائيًا، أو الصق رقم القطعة والكمية معًا من Excel في العمود المناسب لتحديثهما في الصف الصحيح. ويمكنك أيضًا استخدام «رقم القطعة تحت الطلب» بالطريقة نفسها.';
- cols.forEach(c=>c.label=en?(enCols[c.key]||c.label):({part:'رقم القطعة',alt:'الرقم البديل',name:'اسم القطعة',currentPartNo:'رقم قطعة الكمية الحالية',current:'الكمية الحالية',orderPartNo:'رقم القطعة تحت الطلب',reviewAlt:'الرقم البديل للمراجعة',onorder:'الكمية تحت الطلب',sales25:'مبيعات 2025',sales26:'مبيعات 2026',salesNoor:'مبيعات نور',total:'إجمالي المبيعات',required:'الكمية المطلوبة',supplierPartNo:'رقم القطعة للمورد',supplierPrice:'سعر المورد',supplierQty:'كمية المورد',leadTime:'مدة التوريد'}[c.key]||c.label));
+ cols.forEach(c=>c.label=en?(enCols[c.key]||c.label):({part:'رقم القطعة',alt:'الرقم البديل',name:'اسم القطعة',currentPartNo:'رقم قطعة الكمية الحالية',current:'الكمية الحالية',orderPartNo:'رقم القطعة تحت الطلب',reviewAlt:'الرقم البديل للمراجعة',onorder:'الكمية تحت الطلب',sales25:'مبيعات 2025',sales26:'مبيعات 2026',salesNoorPart:'رقم القطعة لمبيعات نور',salesNoor:'مبيعات نور',total:'إجمالي المبيعات',required:'الكمية المطلوبة',supplierPartNo:'رقم القطعة للمورد',supplierPrice:'سعر المورد',supplierQty:'كمية المورد',leadTime:'مدة التوريد'}[c.key]||c.label));
 }
 $('languageToggle').addEventListener('click',()=>{uiLang=uiLang==='ar'?'en':'ar';localStorage.setItem('kanaraUiLang',uiLang);applyLanguage();render()});
 function renderHead(){
  applyLanguage();
- $('headRow').innerHTML='<th>#</th>'+cols.filter(c=>(c.key!=='alt'||showAlt)&&(c.key!=='orderPartNo'||showOrderPartNo)&&(c.key!=='currentPartNo'||showCurrentPartNo)&&(c.key!=='salesNoor'||showSalesNoor)&&(c.key!=='reviewAlt'||(showReviewAlt&&rows.some(r=>r._needsReview)))).map(c=>`<th class="sort" data-col="${c.key}"><div class="th-content"><span>${c.label}</span><button type="button" class="filter-trigger" data-menu="${c.key}" aria-label="فرز وتصفية ${c.label}" title="فرز وتصفية">▼</button></div></th>`).join('');
+ $('headRow').innerHTML='<th>#</th>'+cols.filter(c=>(c.key!=='alt'||showAlt)&&(c.key!=='orderPartNo'||showOrderPartNo)&&(c.key!=='currentPartNo'||showCurrentPartNo)&&(c.key!=='salesNoor'||showSalesNoor)&&(c.key!=='salesNoorPart'||showSalesNoorPart)&&(c.key!=='reviewAlt'||(showReviewAlt&&rows.some(r=>r._needsReview)))).map(c=>`<th class="sort" data-col="${c.key}"><div class="th-content"><span>${c.label}</span><button type="button" class="filter-trigger" data-menu="${c.key}" aria-label="فرز وتصفية ${c.label}" title="فرز وتصفية">▼</button></div></th>`).join('');
  document.querySelectorAll('[data-menu]').forEach(btn=>btn.onclick=e=>{
    e.stopPropagation();
    const key=btn.dataset.menu;
@@ -416,7 +418,7 @@ function openColumnMenu(key,button){
 function render(){
  renderHead();
  const searchNeedle=filterText.trim().toLocaleLowerCase();
- const visibleCols=cols.filter(c=>(c.key!=='alt'||showAlt)&&(c.key!=='orderPartNo'||showOrderPartNo)&&(c.key!=='currentPartNo'||showCurrentPartNo)&&(c.key!=='salesNoor'||showSalesNoor)&&(c.key!=='reviewAlt'||(showReviewAlt&&rows.some(x=>x._needsReview))));
+ const visibleCols=cols.filter(c=>(c.key!=='alt'||showAlt)&&(c.key!=='orderPartNo'||showOrderPartNo)&&(c.key!=='currentPartNo'||showCurrentPartNo)&&(c.key!=='salesNoor'||showSalesNoor)&&(c.key!=='salesNoorPart'||showSalesNoorPart)&&(c.key!=='reviewAlt'||(showReviewAlt&&rows.some(x=>x._needsReview))));
  const filtered=[];
  for(let i=0;i<rows.length;i++){
    const r=rows[i];
@@ -586,7 +588,7 @@ function pasteGridText(text,startRow=0,startCol=0){
  render();
 }
 
-function save(){try{localStorage.setItem('sparePartsPlannerV1',JSON.stringify({rows,settings:{plan:$('plan').value,ship:$('ship').value,cover:$('cover').value,months26:$('months26').value,showAlt,showOrderPartNo,showCurrentPartNo,showSalesNoor,showReviewAlt}}))}catch(e){}}
+function save(){try{localStorage.setItem('sparePartsPlannerV1',JSON.stringify({rows,settings:{plan:$('plan').value,ship:$('ship').value,cover:$('cover').value,months26:$('months26').value,showAlt,showOrderPartNo,showCurrentPartNo,showSalesNoor,showSalesNoorPart,showReviewAlt}}))}catch(e){}}
 function newRow(){return Object.fromEntries(cols.filter(c=>!c.calc).map(c=>[c.key,'']))}
 function rowHasData(r){return cols.filter(c=>!c.calc).some(c=>String(r?.[c.key]??'').trim()!=='')}
 function ensure(n){while(rows.length<n)rows.push(newRow())}
@@ -600,9 +602,12 @@ document.addEventListener('paste',e=>{
  const isSupplierColumn=input.dataset.k==='supplierPartNo';
  const isOrderPartColumn=input.dataset.k==='orderPartNo';
  const isCurrentPartColumn=input.dataset.k==='currentPartNo';
- if(!isSupplierColumn && !isOrderPartColumn && !isCurrentPartColumn && !text.includes('\n') && !text.includes('\r') && !text.includes('\t')) return;
+ const isNoorPartColumn=input.dataset.k==='salesNoorPart';
+ const isNoorSalesColumn=input.dataset.k==='salesNoor';
+ if(!isSupplierColumn && !isOrderPartColumn && !isCurrentPartColumn && !isNoorPartColumn && !isNoorSalesColumn && !text.includes('\n') && !text.includes('\r') && !text.includes('\t')) return;
  e.preventDefault();
  const rowIndex=Number(input.dataset.i)||0;
+ if(isNoorPartColumn || isNoorSalesColumn){pasteNoorData(text,input.dataset.k);return;}
  if(isSupplierColumn){
    if(text.includes('\t')) pasteSupplierReply(text,rowIndex);
    else pasteSupplierPartColumn(text);
@@ -622,6 +627,55 @@ document.addEventListener('paste',e=>{
  const colIndex=Math.max(0,editableCols.findIndex(c=>c.key===input.dataset.k));
  pasteGridText(text,rowIndex,colIndex);
 });
+
+function pasteNoorData(text,targetKey){
+ const lines=text.replace(/\r/g,'').split('\n').filter(line=>line.trim()!=='');
+ if(!lines.length)return;
+ const table=lines.map(line=>line.split('\t').map(v=>String(v??'').trim()));
+ const width=Math.max(...table.map(r=>r.length));
+ const normalizeHeader=v=>String(v??'').toLowerCase().replace(/[\s_\-]+/g,' ').trim();
+ const headers=table[0].map(normalizeHeader);
+ const hasHeader=headers.some(v=>/(part|item|قطعة|رقم)/i.test(v)) && headers.some(v=>/(sales|qty|quantity|مبيعات|كمية)/i.test(v));
+ const data=hasHeader?table.slice(1):table;
+ if(!data.length){alert(uiLang==='en'?'No data rows found in the pasted range.':'لم أجد صفوف بيانات في النطاق المنسوخ.');return;}
+ const partHeader=v=>/(part\s*(number|no\.?|#)?|item\s*(number|no\.?|#)?|رقم\s*القطعة|رقم\s*قطعة|رقم\s*الصنف)/i.test(v);
+ const salesHeader=v=>/(sales|qty|quantity|مبيعات|كمية)/i.test(v);
+ let partCol=-1,salesCol=-1;
+ if(width>1){
+   if(hasHeader){partCol=headers.findIndex(partHeader);salesCol=headers.findIndex((v,i)=>i!==partCol&&salesHeader(v));}
+   if(partCol<0)partCol=0;
+   if(salesCol<0){salesCol=-1;for(let c=0;c<width;c++){if(c===partCol)continue;if(data.some(row=>{const v=String(row[c]??'').trim();return v!==''&&Number.isFinite(Number(v.replace(/[٬,\s]/g,'')))})){salesCol=c;break;}}}
+ }
+ const mainMap=new Map(),altMap=new Map();
+ rows.forEach((r,i)=>{if(r._needsReview)return;const main=normalizePart(r.part),alt=normalizePart(r.alt);if(main&&!mainMap.has(main))mainMap.set(main,i);if(alt&&!altMap.has(alt))altMap.set(alt,i)});
+ const findPartRow=key=>mainMap.has(key)?mainMap.get(key):altMap.get(key);
+ let matched=0,unmatched=[];
+ if(width>1 && salesCol>=0){
+   data.forEach(row=>{
+     const part=String(row[partCol]??'').trim();const key=normalizePart(part);if(!key)return;
+     const rawSales=String(row[salesCol]??'').trim();
+     const i=findPartRow(key);
+     if(i===undefined){unmatched.push(part);return;}
+     rows[i].salesNoorPart=part;
+     if(rawSales!=='')rows[i].salesNoor=rawSales.replace(/[٬,]/g,'');
+     matched++;
+   });
+ }else if(targetKey==='salesNoorPart'){
+   // One-column paste: match part numbers to existing rows. Paste the part number and Noor sales together for best results.
+   const values=data.map(row=>String(row[0]??'').trim()).filter(Boolean);
+   values.forEach(part=>{const i=findPartRow(normalizePart(part));if(i===undefined){unmatched.push(part);return;}rows[i].salesNoorPart=part;matched++;});
+ }else{
+   // One-column sales paste is accepted only when Noor part-number codes have already been matched in this session.
+   const ordered=rows.map((r,i)=>({r,i})).filter(x=>String(x.r.salesNoorPart??'').trim()!=='');
+   if(ordered.length!==data.length){alert(uiLang==='en'?'To avoid assigning sales to the wrong part, paste Noor Part Number and Noor Sales together as two Excel columns.':'لتجنب وضع المبيعات على قطعة خاطئة، انسخ عمود رقم القطعة من نور وعمود مبيعات نور معًا والصقهما دفعة واحدة في عمود «رقم القطعة لمبيعات نور».');return;}
+   data.forEach((row,j)=>{const raw=String(row[0]??'').trim();if(raw!=='')ordered[j].r.salesNoor=raw.replace(/[٬,]/g,'');});
+   matched=data.length;
+ }
+ if(matched){save();render();}
+ const msg=uiLang==='en'?`Noor data matched to ${matched} existing parts.`:`تمت مطابقة بيانات نور مع ${matched} قطعة موجودة.`;
+ const extra=unmatched.length?(uiLang==='en'?` Unmatched part numbers (${unmatched.length}) were not assigned to any row: `:` تعذر مطابقة ${unmatched.length} رقمًا ولم تُسند إلى صف عشوائي: `)+unmatched.slice(0,12).join(', '):'';
+ alert(msg+extra);
+}
 
 function normalizePart(v){
  // Normalize Excel part numbers without accidentally changing numeric IDs such as 2310168.0 into 23101680.
@@ -840,6 +894,7 @@ $('toggleAlt').addEventListener('change',e=>{showAlt=e.target.checked;save();ren
 $('toggleOrderPartNo').addEventListener('change',e=>{showOrderPartNo=e.target.checked;render()});
 $('toggleCurrentPartNo').addEventListener('change',e=>{showCurrentPartNo=e.target.checked;save();render()});
 $('toggleSalesNoor').addEventListener('change',e=>{showSalesNoor=e.target.checked;save();render()});
+$('toggleSalesNoorPart').addEventListener('change',e=>{showSalesNoorPart=e.target.checked;save();render()});
 $('toggleReviewAlt').addEventListener('change',e=>{showReviewAlt=e.target.checked;save();render()});
 $('addRow').onclick=()=>{rows.push(newRow());save();render();$('tbody tr:last-child input')?.focus()};
 ['plan','ship','cover','months26'].forEach(id=>$(id).addEventListener('input',()=>{save();renderStatsOnly()}));
@@ -1046,7 +1101,7 @@ $('locationPrint').addEventListener('click',()=>{
 });
 
 
-try{const saved=JSON.parse(localStorage.getItem('sparePartsPlannerV1')||'null');if(saved){rows=(saved.rows||[]).map(old=>{const r=newRow();cols.filter(c=>!c.calc).forEach(c=>{r[c.key]=old?.[c.key]??''});if(old?._needsReview && String(r.orderPartNo??'').trim()!=='')r._needsReview=true;return r}).filter(rowHasData);if(saved.settings)Object.entries(saved.settings).forEach(([k,v])=>{if(k==='showAlt'){showAlt=v!==false;if($('toggleAlt'))$('toggleAlt').checked=showAlt}else if(k==='showOrderPartNo'){showOrderPartNo=v!==false;if($('toggleOrderPartNo'))$('toggleOrderPartNo').checked=showOrderPartNo}else if(k==='showCurrentPartNo'){showCurrentPartNo=v!==false;if($('toggleCurrentPartNo'))$('toggleCurrentPartNo').checked=showCurrentPartNo}else if(k==='showSalesNoor'){showSalesNoor=v!==false;if($('toggleSalesNoor'))$('toggleSalesNoor').checked=showSalesNoor}else if(k==='showReviewAlt'){showReviewAlt=v===true;if($('toggleReviewAlt'))$('toggleReviewAlt').checked=showReviewAlt}else if($(k))$(k).value=v})}}catch(e){}
+try{const saved=JSON.parse(localStorage.getItem('sparePartsPlannerV1')||'null');if(saved){rows=(saved.rows||[]).map(old=>{const r=newRow();cols.filter(c=>!c.calc).forEach(c=>{r[c.key]=old?.[c.key]??''});if(old?._needsReview && String(r.orderPartNo??'').trim()!=='')r._needsReview=true;return r}).filter(rowHasData);if(saved.settings)Object.entries(saved.settings).forEach(([k,v])=>{if(k==='showAlt'){showAlt=v!==false;if($('toggleAlt'))$('toggleAlt').checked=showAlt}else if(k==='showOrderPartNo'){showOrderPartNo=v!==false;if($('toggleOrderPartNo'))$('toggleOrderPartNo').checked=showOrderPartNo}else if(k==='showCurrentPartNo'){showCurrentPartNo=v!==false;if($('toggleCurrentPartNo'))$('toggleCurrentPartNo').checked=showCurrentPartNo}else if(k==='showSalesNoor'){showSalesNoor=v!==false;if($('toggleSalesNoor'))$('toggleSalesNoor').checked=showSalesNoor}else if(k==='showSalesNoorPart'){showSalesNoorPart=v!==false;if($('toggleSalesNoorPart'))$('toggleSalesNoorPart').checked=showSalesNoorPart}else if(k==='showReviewAlt'){showReviewAlt=v===true;if($('toggleReviewAlt'))$('toggleReviewAlt').checked=showReviewAlt}else if($(k))$(k).value=v})}}catch(e){}
 if(!rows.length)rows=Array.from({length:10},newRow);
 save();
 applyLanguage();
