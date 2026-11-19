@@ -328,30 +328,47 @@ main{grid-template-columns:250px minmax(360px,1fr) 380px}
 .machineview.component-mode #machineStage{touch-action:none;cursor:grab}
 .machineview.component-mode #machineStage.is-panning{cursor:grabbing}
 .diagram-zoom-tools{
- position:absolute;z-index:100;top:14px;right:14px;display:flex;align-items:center;gap:6px;
- padding:6px;background:#101a25eF;border:1px solid #52677c;border-radius:12px;
+ position:absolute;z-index:100;top:12px;right:12px;display:flex;align-items:center;gap:4px;
+ padding:4px;background:#101a25eF;border:1px solid #52677c;border-radius:12px;
  box-shadow:0 5px 18px #0005;direction:ltr
 }
 .diagram-zoom-tools button{
- min-width:36px;height:36px;border:1px solid #536a80;border-radius:8px;
+ min-width:30px;height:30px;border:1px solid #536a80;border-radius:8px;
  background:#233548;color:#fff;font:800 19px Arial;cursor:pointer
 }
 .diagram-zoom-tools button:hover{background:#f5b91b;color:#17202a;border-color:#f5b91b}
-.diagram-zoom-tools .zoom-level{min-width:48px;text-align:center;color:#fff;font:700 12px Arial}
+.diagram-zoom-tools .zoom-level{min-width:40px;text-align:center;color:#fff;font:700 12px Arial}
 .diagram-zoom-tools .zoom-reset{font:700 11px Tajawal,Arial;padding:0 9px;min-width:48px}
-.diagram-pan-pad{display:grid;grid-template-columns:30px 30px 30px;grid-template-rows:30px 30px 30px;gap:2px;margin-left:4px;padding-left:6px;border-left:1px solid #536a80}
-.diagram-pan-pad button{min-width:30px;width:30px;height:30px;font-size:15px;line-height:1}
+.diagram-pan-pad{display:grid;grid-template-columns:25px 25px 25px;grid-template-rows:25px 25px 25px;gap:2px;margin-left:3px;padding-left:4px;border-left:1px solid #536a80}
+.diagram-pan-pad button{min-width:25px;width:25px;height:25px;font-size:15px;line-height:1}
 .diagram-pan-pad [data-pan="up"]{grid-column:2;grid-row:1}
 .diagram-pan-pad [data-pan="left"]{grid-column:1;grid-row:2}
 .diagram-pan-pad [data-pan="right"]{grid-column:3;grid-row:2}
 .diagram-pan-pad [data-pan="down"]{grid-column:2;grid-row:3}
 .diagram-pan-pad button:disabled{opacity:.35;cursor:not-allowed}
 
-@media(max-width:700px){.diagram-zoom-tools{top:8px;right:8px;gap:4px;padding:4px}.diagram-zoom-tools button{min-width:32px;height:32px}}
+.diagram-tools-toggle{position:absolute;z-index:101;top:12px;right:12px;min-width:30px;height:30px;padding:0 8px;border:1px solid #536a80;border-radius:8px;background:#101a25eF;color:#fff;font:700 11px Tajawal;cursor:pointer;box-shadow:0 3px 12px #0004}
+.diagram-tools-toggle:hover{background:#f5b91b;color:#17202a}
+.diagram-zoom-tools[hidden],.diagram-tools-toggle[hidden]{display:none!important}
+@media(max-width:700px){.diagram-zoom-tools{top:8px;right:8px;gap:3px;padding:3px}.diagram-zoom-tools button{min-width:28px;height:28px}.diagram-tools-toggle{top:8px;right:8px}}
+
+</style>
+<style id="kanara-layout-direction-fix">
+/* Mirror the two side panels when the interface is English, keeping the work area centered. */
+html[dir="ltr"] main{grid-template-columns:250px minmax(360px,1fr) 380px}
+html[dir="ltr"] .sidebar{text-align:left}
+html[dir="ltr"] .right{text-align:left}
+html[dir="ltr"] .sidebar .sysbtn,html[dir="ltr"] .system-component-link,html[dir="ltr"] .component-row,html[dir="ltr"] .component-part-link{text-align:left}
+html[dir="ltr"] .admin-layout{direction:ltr}
+html[dir="ltr"] .admin-groups{border-left:0;border-right:1px solid #405366}
+html[dir="ltr"] header.kanara-header{direction:ltr}
+html[dir="ltr"] header.kanara-header nav{direction:ltr;margin-inline-start:0;margin-inline-end:auto}
+html[dir="ltr"] .diagram-zoom-tools{right:auto;left:12px}
+@media(max-width:1050px){html[dir="ltr"] main{grid-template-columns:235px minmax(330px,1fr)}}
 </style>
 
 </head><body>
-<header class="kanara-header"><div class="brand kanara-brand"><span class="kanara-name">كنارة</span><span class="brand-divider"></span><span class="brand-title">دليل المعدات وقطع الغيار</span></div><nav><button>⌂ الرئيسية</button><button>⌕ بحث</button><button>▤ قائمة القطع</button><button>☆ المفضلة</button><button>▧ الملاحظات</button><button id="languageToggle" class="language-toggle" onclick="toggleLanguage()">English</button><button class="admin-entry" onclick="openAdmin()">⚙ لوحة التحكم</button></nav></header>
+<header class="kanara-header"><div class="brand kanara-brand"><span class="kanara-name">كنارة</span><span class="brand-divider"></span><span class="brand-title">دليل المعدات وقطع الغيار</span></div><nav><button id="languageToggle" class="language-toggle" onclick="toggleLanguage()">English</button><button class="admin-entry" onclick="openAdmin()">⚙ لوحة التحكم</button></nav></header>
 <main>
 <aside class="sidebar panel"><div class="paneltitle" id="sidebarTitle">القائمة الرئيسية</div><div id="systemButtons"></div><div class="small" style="margin-top:auto;padding:8px">يمكنك إضافة أرقام القطع والشرح والصور لكل مكوّن.</div></aside>
 <section class="center panel"><div class="centerbar"><div class="tabs" id="modelTabs"><button class="active" id="tab3" onclick="setModel('3CX')">3CX</button><button id="tab4" onclick="setModel('4CX')">4CX</button></div><div class="hint" id="mainHint">اختر مجموعة أو اضغط على نقطة بالمعدة</div><button id="backHomeBtn" class="workspace-back" onclick="showHome()" hidden>⌂ الرئيسية</button></div>
@@ -388,7 +405,7 @@ main{grid-template-columns:250px minmax(360px,1fr) 380px}
 <button class="action" onclick="openDetails()">عرض جميع المكونات</button>
 <p class="panel-note">القائمة مبدئية، وسيتم استكمال التفاصيل وأرقام القطع والشروحات لاحقاً.</p>
 </aside>
-<section class="bottom panel" id="bottomTiles"></section></main>
+</main>
 <div class="system-workspace" id="systemWorkspace" aria-hidden="true">
  <div class="workspace-shell">
   <div class="workspace-top">
@@ -525,7 +542,7 @@ function normalizeData(raw){
  const nextParts={};
  nextSystems.forEach(g=>{
   const arr=(raw.parts&&raw.parts[g[0]])||defaultParts[g[0]]||[];
-  nextParts[g[0]]=arr.map(v=>typeof v==="string"?{name:v,nameEn:"",partNo:"",altNo:"",info:"",infoEn:"",notes:"",notesEn:"",drawingImage:"",subParts:[]}:{name:v.name||"",nameEn:v.nameEn||"",partNo:v.partNo||"",altNo:v.altNo||"",info:v.info||"",infoEn:v.infoEn||"",notes:v.notes||"",notesEn:v.notesEn||"",drawingImage:v.drawingImage||"",subParts:Array.isArray(v.subParts)?v.subParts.map(x=>({name:x.name||"",nameEn:x.nameEn||"",partNo:x.partNo||"",altNo:x.altNo||"",info:x.info||"",infoEn:x.infoEn||"",notes:x.notes||"",notesEn:x.notesEn||"",callout:x.callout||"",qty:x.qty??"",x:Number(x.x)||0,y:Number(x.y)||0})):[]});
+  nextParts[g[0]]=arr.map(v=>typeof v==="string"?{name:v,nameEn:"",partNo:"",altNo:"",info:"",infoEn:"",notes:"",notesEn:"",drawingImage:"",subParts:[]}:{name:v.name||"",nameEn:v.nameEn||"",partNo:v.partNo||"",altNo:v.altNo||"",info:v.info||"",infoEn:v.infoEn||"",notes:v.notes||"",notesEn:v.notesEn||"",drawingImage:v.drawingImage||"",drawingImage2:v.drawingImage2||"",subParts:Array.isArray(v.subParts)?v.subParts.map(x=>({name:x.name||"",nameEn:x.nameEn||"",partNo:x.partNo||"",altNo:x.altNo||"",info:x.info||"",infoEn:x.infoEn||"",notes:x.notes||"",notesEn:x.notesEn||"",callout:x.callout||"",qty:x.qty??"",x:Number(x.x)||0,y:Number(x.y)||0})):[]});
  });
  return {systems:nextSystems.map(g=>[String(g[0]),String(g[1]||""),String(g[2]||""),String(g[3]||""),String(g[4]||"")]),parts:nextParts};
 }
@@ -546,10 +563,6 @@ function applyLanguage(){
  document.documentElement.dir=en?"ltr":"rtl";
  const toggle=document.getElementById("languageToggle");
  if(toggle)toggle.textContent=en?"العربية":"English";
- const nav=document.querySelectorAll("header nav button");
- const navAr=["⌂ الرئيسية","⌕ بحث","▤ قائمة القطع","☆ المفضلة","▧ الملاحظات"];
- const navEn=["⌂ Home","⌕ Search","▤ Parts List","☆ Favorites","▧ Notes"];
- nav.forEach((b,i)=>{if(i<5)b.textContent=(en?navEn:navAr)[i];});
  const admin=document.querySelector(".admin-entry");if(admin)admin.textContent=en?"⚙ Control Panel":"⚙ لوحة التحكم";
  const brand=document.querySelector(".brand-title");if(brand)brand.textContent=en?"Equipment & Spare Parts Guide":"دليل المعدات وقطع الغيار";
  const sidebar=document.getElementById("sidebarTitle");if(sidebar)sidebar.textContent=en?(currentView==="component"?"Component Parts":"Main Menu"):(currentView==="component"?"أجزاء المكوّن":"القائمة الرئيسية");
@@ -783,7 +796,7 @@ function render(){
     </div>
    </div>`;
   }).join("");
- document.getElementById("bottomTiles").innerHTML=systems.slice().reverse().map(g=>`<div class="tile ${g[0]===active&&currentView!=="home"?"active":""}" onclick="selectSystem('${g[0]}')"><span class="ico">⚙</span><span>${esc(displayName(g[1],g[3]))}</span></div>`).join("");
+
  const selected=systems.find(g=>g[0]===active);
  if(!selected){
   document.getElementById("selectedTitle").textContent=appLanguage==="en"?"No systems":"لا توجد مجموعات";
@@ -902,15 +915,23 @@ function renderActiveComponent(){
   activeDiagramIndex=next;activeDiagramImageIndex=next;resetDiagramZoom();
   const image=stage.querySelector("#activeComponentDiagram");
   image.onload=()=>{drawMarkers();applyDiagramTransform();};
-  image.src=diagramImages[next];
+  image.decoding="async";image.src=diagramImages[next];
   topDiagramButtons().forEach(b=>b.classList.toggle("active",Number(b.dataset.topDiagram)===next));
  }; 
  topDiagramButtons().forEach(button=>button.onclick=()=>switchDiagramImage(Number(button.dataset.topDiagram)));
- stage.innerHTML=diagramImages[activeDiagramIndex]?`<img id="activeComponentDiagram" src="${diagramImages[activeDiagramIndex]}" alt="${esc(displayName(component.name,component.nameEn))}">`:`<div class="diagram-placeholder">${appLanguage==="en"?"No component diagram uploaded. Add it from Control Panel.":"لم تتم إضافة صورة تفصيلية لهذا المكوّن بعد. أضفها من لوحة التحكم."}</div>`;
+ stage.innerHTML=diagramImages[activeDiagramIndex]?`<img decoding="async" id="activeComponentDiagram" src="${diagramImages[activeDiagramIndex]}" alt="${esc(displayName(component.name,component.nameEn))}">`:`<div class="diagram-placeholder">${appLanguage==="en"?"No component diagram uploaded. Add it from Control Panel.":"لم تتم إضافة صورة تفصيلية لهذا المكوّن بعد. أضفها من لوحة التحكم."}</div>`;
  const zoomTools=document.createElement("div");
- zoomTools.className="diagram-zoom-tools";
+ zoomTools.className="diagram-zoom-tools";zoomTools.hidden=diagramToolsHidden;
  zoomTools.innerHTML=`<button type="button" aria-label="Zoom out" title="تصغير" data-zoom="out">−</button><span class="zoom-level" id="diagramZoomLevel">100%</span><button type="button" aria-label="Zoom in" title="تكبير" data-zoom="in">+</button><button type="button" class="zoom-reset" data-zoom="reset">إعادة</button><div class="diagram-pan-pad" aria-label="تحريك الصورة"><button type="button" title="تحريك لأعلى" aria-label="Up" data-pan="up">↑</button><button type="button" title="تحريك لليسار" aria-label="Left" data-pan="left">←</button><button type="button" title="تحريك لليمين" aria-label="Right" data-pan="right">→</button><button type="button" title="تحريك لأسفل" aria-label="Down" data-pan="down">↓</button></div>`;
  stage.appendChild(zoomTools);
+ const toolsToggle=document.createElement("button");
+ toolsToggle.type="button";toolsToggle.className="diagram-tools-toggle";toolsToggle.textContent=appLanguage==="en"?"Show controls":"إظهار الأدوات";toolsToggle.hidden=!diagramToolsHidden;
+ toolsToggle.onclick=()=>{diagramToolsHidden=false;zoomTools.hidden=false;toolsToggle.hidden=true;};
+ stage.appendChild(toolsToggle);
+ const hideToolsButton=document.createElement("button");
+ hideToolsButton.type="button";hideToolsButton.className="zoom-reset";hideToolsButton.textContent=appLanguage==="en"?"Hide":"إخفاء";hideToolsButton.title=appLanguage==="en"?"Hide controls":"إخفاء أدوات الصورة";
+ hideToolsButton.onclick=()=>{diagramToolsHidden=true;zoomTools.hidden=true;toolsToggle.hidden=false;};
+ zoomTools.appendChild(hideToolsButton);
  zoomTools.querySelector('[data-zoom="out"]').onclick=()=>changeDiagramZoom(-0.2);
  zoomTools.querySelector('[data-zoom="in"]').onclick=()=>changeDiagramZoom(0.2);
  zoomTools.querySelector('[data-zoom="reset"]').onclick=()=>resetDiagramZoom();
@@ -976,7 +997,7 @@ function renderActiveComponent(){
   document.getElementById("componentList").innerHTML=`<div class="part-data-card"><p class="panel-note">${appLanguage==="en"?"Select a part from the list or click its yellow number on the diagram.":"اختر قطعة من القائمة أو اضغط على رقمها الأصفر في الرسم لعرض بياناتها."}</p></div>`;
   }
 }
-let activeDiagramImageIndex=0;
+let activeDiagramImageIndex=0; let diagramToolsHidden=false;
 let diagramZoom=1,diagramPanX=0,diagramPanY=0,diagramPanStart=null;
 function applyDiagramTransform(){
  const stage=document.getElementById("machineStage");
@@ -1347,4 +1368,32 @@ function applyAdminLanguage(){
   if(labels[ar])el.textContent=en?labels[ar]:ar;
  });
 }
-</script></body></html>
+</script>
+<style id="kanara-reference-layout-update">
+/* Remove the redundant bottom tile strip and give the main workspace its height. */
+main{grid-template-rows:minmax(0,1fr)!important; height:calc(100vh - 80px); min-height:0;}
+main>.sidebar, main>.center, main>.right{grid-row:1!important; min-height:0;}
+main>.bottom{display:none!important;}
+main{grid-template-columns:230px minmax(0,1fr) 410px!important;}
+.center{height:100%;min-height:0;}
+.machineview{min-height:0;}
+/* In the parts window, keep the diagram large and widen the left-side data panel.
+   RTL grid order: the final column is the leftmost information panel. */
+.catalog-view{grid-template-columns:minmax(190px,225px) minmax(0,1fr) minmax(340px,40%)!important;}
+.catalog-part-info{padding:18px!important;overflow-y:auto;}
+.catalog-part-info h3{font-size:19px;padding-bottom:13px;margin-bottom:14px;}
+.catalog-part-details{display:grid;grid-template-columns:1fr 1fr;column-gap:14px;align-content:start;}
+.catalog-part-details h4{grid-column:1/-1;font-size:19px;padding:12px;background:#1d2d3c;border:1px solid #52697e;border-radius:8px;}
+.catalog-part-details label{font-size:13px;margin-top:12px;}
+.catalog-part-details input{min-height:40px;font-size:14px;}
+.catalog-part-details textarea{min-height:92px;font-size:14px;}
+.catalog-part-details label:has(+ textarea),.catalog-part-details label:has(+ textarea)+textarea{grid-column:1/-1;}
+@media(max-width:1050px){
+ main{grid-template-columns:220px minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr) auto!important;height:auto;min-height:calc(100vh - 80px);}
+ main>.sidebar{grid-row:1!important;} main>.center{grid-row:1!important;} main>.right{grid-row:2!important;grid-column:1/3!important;}
+}
+@media(max-width:900px){.catalog-view{grid-template-columns:1fr!important;overflow:auto;}.catalog-part-details{grid-template-columns:1fr 1fr;}.catalog-part-info{order:3;}.catalog-drawing{order:1;}.catalog-subparts{order:2;}}
+@media(max-width:700px){main{display:flex;flex-direction:column;min-height:0;height:auto;}main>.center{height:65vh;min-height:460px;}main>.right{order:3;}main>.sidebar{order:2;}}
+</style>
+
+</body></html>
