@@ -938,9 +938,56 @@ function renderAdmin(){
  applyAdminLanguage();
 }
 function chooseAdminSystem(id){adminSystemId=id;active=id;expandedSystemId=id;editingPartIndex=-1;render();renderAdmin();clearComponentForm();}
-function newSystem(){
+async function newSystem(){
+ // Require an authenticated administrator before creating a cloud-backed group.
+ if(!supabaseSession){
+  alert("انتهت جلسة المدير. سجّل الدخول مرة أخرى قبل إضافة مجموعة.");
+  showSupabaseLogin("سجّل الدخول بحساب المدير لإضافة مجموعة جديدة.");
+  return;
+ }
+
+ // Keep a rollback copy: a failed cloud save must not create a browser-only group.
+ const previousSystems=JSON.parse(JSON.stringify(systems));
+ const previousParts=JSON.parse(JSON.stringify(parts));
+ const previousAdminSystemId=adminSystemId;
+ const previousActive=active;
+ const previousExpanded=expandedSystemId;
  const id="group_"+Date.now();
- systems.push([id,"مجموعة جديدة","","New Group",""]);parts[id]=[];adminSystemId=id;editingPartIndex=-1;saveStore();render();renderAdmin();document.getElementById("adminSystemName").focus();
+
+ systems.push([id,"مجموعة جديدة","","New Group",""]);
+ parts[id]=[];
+ adminSystemId=id;
+ editingPartIndex=-1;
+
+ const addButton=document.querySelector(".admin-subhead button");
+ if(addButton)addButton.disabled=true;
+
+ try{
+  const saved=await saveStore();
+  if(!saved)throw new Error("تعذر حفظ المجموعة في قاعدة البيانات السحابية.");
+
+  active=id;
+  expandedSystemId=id;
+  render();
+  renderAdmin();
+  document.getElementById("adminSystemName").focus();
+ }catch(error){
+  systems=previousSystems;
+  parts=previousParts;
+  adminSystemId=previousAdminSystemId;
+  active=previousActive;
+  expandedSystemId=previousExpanded;
+  try{
+   await writeCatalogDB({systems,parts,savedAt:new Date().toISOString(),source:"rollback-after-cloud-save-failure"});
+  }catch(storageError){
+   console.error("Could not restore local catalog after failed group creation:",storageError);
+  }
+  render();
+  renderAdmin();
+  alert("لم تتم إضافة المجموعة؛ لم يؤكد Supabase حفظها.\\n"+(error.message||"تحقق من صلاحيات INSERT وUPDATE في Supabase."));
+ }finally{
+  if(addButton)addButton.disabled=false;
+ }
 }
 function saveSystem(){
  const group=systems.find(g=>g[0]===adminSystemId);if(!group)return;
