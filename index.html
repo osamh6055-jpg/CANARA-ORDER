@@ -6,7 +6,7 @@
 header{height:76px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;background:#10161d;border-bottom:4px solid var(--yellow);gap:18px}
 .brand{display:flex;align-items:center;gap:13px;font-weight:800;font-size:24px}.logo{background:var(--yellow);color:#141a20;padding:9px 16px;font-weight:900;font-size:25px;transform:skew(-8deg)}.brand b{color:var(--yellow)}
 nav{display:flex;gap:8px}nav button{background:transparent;color:white;border:0;padding:10px 13px;font:600 15px Tajawal;border-radius:8px}
-main{height:calc(100vh - 80px);min-height:700px;display:grid;grid-template-columns:280px minmax(400px,1fr) 265px;grid-template-rows:minmax(0,1fr) 125px;gap:12px;padding:14px}
+main{height:calc(100vh - 80px);min-height:700px;display:grid;grid-template-columns:250px minmax(400px,1fr) 380px;grid-template-rows:minmax(0,1fr) 125px;gap:12px;padding:14px}
 .panel{background:linear-gradient(180deg,#243141,#18222d);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 8px 28px #0004}
 .sidebar{grid-column:1;grid-row:1 / span 2;padding:10px;display:flex;flex-direction:column;gap:7px}.paneltitle{font-size:19px;font-weight:800;padding:10px 12px;border-bottom:1px solid var(--line)}
 .sysbtn{width:100%;display:flex;align-items:center;gap:12px;text-align:right;border:1px solid #4b5c6e;background:#202d3b;color:#f5f6f7;border-radius:10px;padding:9px 12px;cursor:pointer;font:700 16px Tajawal;min-height:47px}.sysbtn .ico{width:30px;text-align:center;font-size:21px;color:var(--yellow)}.sysbtn.active{background:var(--yellow);color:#17202a;border-color:var(--yellow)}.sysbtn.active .ico{color:#17202a}
@@ -124,7 +124,7 @@ main{height:calc(100vh - 80px);min-height:700px;display:grid;grid-template-colum
 .machineview.component-mode{background:#f4f4f1}
 .machineview.component-mode::before{display:none}
 .machineview.component-mode #machineStage{position:absolute;inset:0;width:100%;height:100%;padding:0;margin:0;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#f4f4f1}
-.machineview.component-mode #machineStage>img{display:block;width:100%;height:100%;max-width:100%;max-height:100%;object-fit:contain;object-position:center;filter:none;margin:0}
+.machineview.component-mode #machineStage>img{display:block;width:100%;height:100%;max-width:100%;max-height:100%;object-fit:contain;object-position:center;filter:none;margin:0;transform-origin:center center;will-change:transform}
 .machineview.component-mode #machineStage .diagram-placeholder{color:#66717c;text-align:center;line-height:2;font-size:14px;padding:25px}
 .machineview.component-mode .viewtools{display:none}
 .machineview.component-mode .rotatebadge{display:none}
@@ -297,7 +297,60 @@ header.kanara-header nav .admin-entry{color:var(--yellow);border:1px solid #8a6b
 html[dir="ltr"] body{text-align:left}
 html[dir="ltr"] header,html[dir="ltr"] .sidebar,html[dir="ltr"] .right-panel{text-align:left}
 input[dir="ltr"],textarea[dir="ltr"]{text-align:left}
-</style></head><body>
+</style>
+<style id="kanara-selected-part-layout-update">
+/* Wider selected-part panel and clearer reading sizes */
+main{grid-template-columns:250px minmax(360px,1fr) 380px}
+.right.component-selected{padding:16px;gap:12px}
+.right.component-selected #selectedTitle{font-size:27px;line-height:1.35}
+.right.component-selected #selectedDesc{font-size:14px;line-height:1.9;margin-bottom:8px}
+.right.component-selected .component-heading{font-size:17px;padding:12px 0}
+.right.component-selected .component-part-link{font-size:14px;padding:11px 10px;min-height:54px}
+.right.component-selected .component-part-link .part-num{min-width:32px;height:32px;font-size:14px}
+.right.component-selected .component-part-link small{font-size:12px}
+.right.component-selected .part-data-row{padding:11px 12px}
+.right.component-selected .part-data-row label{font-size:12px}
+.right.component-selected .part-data-row strong{font-size:15px;line-height:1.7}
+.machineview.component-mode #machineStage{background:#f4f4f1}
+.machineview.component-mode #machineStage>img{object-fit:contain;object-position:center}
+@media(max-width:1050px){
+  main{grid-template-columns:220px minmax(300px,1fr);grid-template-rows:minmax(480px,1fr) 115px auto}
+  .right{grid-column:1 / 3;grid-row:3;display:grid;grid-template-columns:160px minmax(0,1fr) minmax(0,1fr);align-items:center}
+}
+@media(max-width:700px){
+  .right.component-selected{display:flex;overflow:visible}
+  .right.component-selected .component-parts-nav{max-height:320px}
+}
+</style>
+
+
+<style id="kanara-diagram-zoom-style">
+.machineview.component-mode #machineStage{touch-action:none;cursor:grab}
+.machineview.component-mode #machineStage.is-panning{cursor:grabbing}
+.diagram-zoom-tools{
+ position:absolute;z-index:100;top:14px;right:14px;display:flex;align-items:center;gap:6px;
+ padding:6px;background:#101a25eF;border:1px solid #52677c;border-radius:12px;
+ box-shadow:0 5px 18px #0005;direction:ltr
+}
+.diagram-zoom-tools button{
+ min-width:36px;height:36px;border:1px solid #536a80;border-radius:8px;
+ background:#233548;color:#fff;font:800 19px Arial;cursor:pointer
+}
+.diagram-zoom-tools button:hover{background:#f5b91b;color:#17202a;border-color:#f5b91b}
+.diagram-zoom-tools .zoom-level{min-width:48px;text-align:center;color:#fff;font:700 12px Arial}
+.diagram-zoom-tools .zoom-reset{font:700 11px Tajawal,Arial;padding:0 9px;min-width:48px}
+.diagram-pan-pad{display:grid;grid-template-columns:30px 30px 30px;grid-template-rows:30px 30px 30px;gap:2px;margin-left:4px;padding-left:6px;border-left:1px solid #536a80}
+.diagram-pan-pad button{min-width:30px;width:30px;height:30px;font-size:15px;line-height:1}
+.diagram-pan-pad [data-pan="up"]{grid-column:2;grid-row:1}
+.diagram-pan-pad [data-pan="left"]{grid-column:1;grid-row:2}
+.diagram-pan-pad [data-pan="right"]{grid-column:3;grid-row:2}
+.diagram-pan-pad [data-pan="down"]{grid-column:2;grid-row:3}
+.diagram-pan-pad button:disabled{opacity:.35;cursor:not-allowed}
+
+@media(max-width:700px){.diagram-zoom-tools{top:8px;right:8px;gap:4px;padding:4px}.diagram-zoom-tools button{min-width:32px;height:32px}}
+</style>
+
+</head><body>
 <header class="kanara-header"><div class="brand kanara-brand"><span class="kanara-name">كنارة</span><span class="brand-divider"></span><span class="brand-title">دليل المعدات وقطع الغيار</span></div><nav><button>⌂ الرئيسية</button><button>⌕ بحث</button><button>▤ قائمة القطع</button><button>☆ المفضلة</button><button>▧ الملاحظات</button><button id="languageToggle" class="language-toggle" onclick="toggleLanguage()">English</button><button class="admin-entry" onclick="openAdmin()">⚙ لوحة التحكم</button></nav></header>
 <main>
 <aside class="sidebar panel"><div class="paneltitle" id="sidebarTitle">القائمة الرئيسية</div><div id="systemButtons"></div><div class="small" style="margin-top:auto;padding:8px">يمكنك إضافة أرقام القطع والشرح والصور لكل مكوّن.</div></aside>
@@ -411,15 +464,18 @@ input[dir="ltr"],textarea[dir="ltr"]{text-align:left}
       <label>وصف المكوّن بالإنجليزية</label><textarea id="adminPartInfoEn" rows="3" placeholder="Component description" dir="ltr"></textarea>
       <label>ملاحظات إضافية</label><textarea id="adminPartNotes" rows="3" placeholder="ملاحظات"></textarea>
       <div class="admin-image-field">
-       <label>الصورة التفصيلية للمكوّن (مثل رسم الراديتر)</label>
-       <input id="adminDrawingFile" type="file" accept="image/*" onchange="loadAdminDrawing(event)">
-       <div id="adminDrawingPreview" class="admin-drawing-preview"><span>لم يتم اختيار رسم تفصيلي</span></div>
-       <button type="button" class="cancel-btn" onclick="clearAdminDrawing()">إزالة صورة الرسم</button>
+       <label>الصورة التفصيلية الأولى</label>
+       <input id="adminDrawingFile" type="file" accept="image/*" onchange="loadAdminDrawing(event,1)">
+       <div id="adminDrawingPreview" class="admin-drawing-preview"><span>لم يتم اختيار الصورة الأولى</span></div>
+       <label>الصورة التفصيلية الثانية (اختيارية)</label>
+       <input id="adminDrawingFile2" type="file" accept="image/*" onchange="loadAdminDrawing(event,2)">
+       <div id="adminDrawingPreview2" class="admin-drawing-preview"><span>لم يتم اختيار الصورة الثانية</span></div>
+       <button type="button" class="cancel-btn" onclick="clearAdminDrawing()">إزالة الصور</button>
       </div>
       <div class="admin-subparts-editor" id="adminSubpartsEditor" style="display:none">
        <div class="admin-section-title"><div><span class="admin-kicker">COMPONENT PARTS</span><h4>المرحلة الثانية: قطع هذا المكوّن</h4></div><span id="adminSubpartCount" class="workspace-count">0</span></div>
        <p class="admin-hint">بعد حفظ المكوّن الرئيسي، أضف هنا قطع المكوّن: اسم القطعة ورقمها والكمية ورقم الإشارة على الرسم.</p>
-       <div id="adminPinStage" class="admin-pin-stage"><span>ارفع صورة الرسم أولاً</span></div>
+       <div style="display:flex;gap:8px;margin:8px 0"><button type="button" class="cancel-btn" onclick="selectAdminPinImage(0)">تحديد الأرقام على الصورة الأولى</button><button type="button" class="cancel-btn" onclick="selectAdminPinImage(1)">تحديد الأرقام على الصورة الثانية</button></div><div id="adminPinStage" class="admin-pin-stage"><span>ارفع صورة الرسم أولاً</span></div>
        <div class="admin-subpart-form">
         <div class="formgrid"><div><label>اسم القطعة بالعربية</label><input id="adminSubName" placeholder="مثال: الماسورة"></div><div><label>اسم القطعة بالإنجليزية</label><input id="adminSubNameEn" placeholder="Example: Hose" dir="ltr"></div></div>
         <div class="formgrid"><div><label>رقم القطعة</label><input id="adminSubNo" placeholder="Part Number" dir="ltr"></div><div><label>الرقم البديل</label><input id="adminSubAlt" placeholder="Alternative Number" dir="ltr"></div></div>
@@ -754,7 +810,7 @@ function render(){
   document.getElementById("machineView").classList.add("component-mode");
   document.getElementById("sketchfabViewer").style.display="none";
   document.getElementById("real3dToggle").style.display="none";
-  document.getElementById("modelTabs").hidden=true;
+  document.getElementById("modelTabs").hidden=false;
   document.getElementById("backHomeBtn").hidden=false;
   document.getElementById("componentPartsNav").hidden=false;
   document.getElementById("systemPanel").classList.add("component-selected");
@@ -788,6 +844,7 @@ function setModel(m){
 }
 function showHome(){
  currentView="home";currentComponentIndex=-1;currentSubpartIndex=-1;
+ document.getElementById("modelTabs").innerHTML=`<button class="${model==="3CX"?"active":""}" id="tab3" onclick="setModel('3CX')">3CX</button><button class="${model==="4CX"?"active":""}" id="tab4" onclick="setModel('4CX')">4CX</button>`;
  const view=document.getElementById("machineView");
  view.classList.remove("component-mode","real-3d");
  document.getElementById("machineStage").innerHTML=homeMachineStageHTML;
@@ -803,13 +860,14 @@ function showHome(){
 function openComponent(systemId,index){
  const component=(parts[systemId]||[])[index];if(!component)return;
  active=systemId;expandedSystemId=systemId;currentView="component";
- currentComponentIndex=index;currentSubpartIndex=-1;
+ currentComponentIndex=index;currentSubpartIndex=-1;activeDiagramImageIndex=0;
+ resetDiagramZoom();
  render();
  document.getElementById("machineView").classList.remove("real-3d");
  document.getElementById("machineView").classList.add("component-mode");
  document.getElementById("sketchfabViewer").style.display="none";
  document.getElementById("real3dToggle").style.display="none";
- document.getElementById("modelTabs").hidden=true;
+ document.getElementById("modelTabs").hidden=false;
  document.getElementById("backHomeBtn").hidden=false;
  document.getElementById("mainHint").textContent=appLanguage==="en"?"Component diagram":"الرسم التفصيلي للمكوّن";
  document.getElementById("sidebarTitle").textContent=appLanguage==="en"?"Main Menu":"القائمة الرئيسية";
@@ -833,7 +891,70 @@ function renderActiveComponent(){
  document.getElementById("component-heading-title").textContent=appLanguage==="en"?"Selected Part Details":"بيانات القطعة المحددة";
  document.getElementById("componentCount").textContent=subparts.length;
  const stage=document.getElementById("machineStage");
- stage.innerHTML=component.drawingImage?`<img id="activeComponentDiagram" src="${component.drawingImage}" alt="${esc(displayName(component.name,component.nameEn))}">`:`<div class="diagram-placeholder">${appLanguage==="en"?"No component diagram uploaded. Add it from Control Panel.":"لم تتم إضافة صورة تفصيلية لهذا المكوّن بعد. أضفها من لوحة التحكم."}</div>`;
+ const diagramImages=[component.drawingImage,component.drawingImage2].filter(Boolean);
+ let activeDiagramIndex=Math.min(activeDiagramImageIndex,Math.max(0,diagramImages.length-1));
+ activeDiagramImageIndex=activeDiagramIndex;
+ const modelTabs=document.getElementById("modelTabs");
+ modelTabs.innerHTML=`<button type="button" class="${activeDiagramIndex===0?"active":""}" data-top-diagram="0">${appLanguage==="en"?"Image 1":"الصورة 1"}</button><button type="button" class="${activeDiagramIndex===1?"active":""}" data-top-diagram="1" ${diagramImages.length<2?"hidden":""}>${appLanguage==="en"?"Image 2":"الصورة 2"}</button>`;
+ const topDiagramButtons=()=>modelTabs.querySelectorAll("[data-top-diagram]");
+ const switchDiagramImage=(next)=>{
+  if(next===activeDiagramIndex||!diagramImages[next])return;
+  activeDiagramIndex=next;activeDiagramImageIndex=next;resetDiagramZoom();
+  const image=stage.querySelector("#activeComponentDiagram");
+  image.onload=()=>{drawMarkers();applyDiagramTransform();};
+  image.src=diagramImages[next];
+  topDiagramButtons().forEach(b=>b.classList.toggle("active",Number(b.dataset.topDiagram)===next));
+ }; 
+ topDiagramButtons().forEach(button=>button.onclick=()=>switchDiagramImage(Number(button.dataset.topDiagram)));
+ stage.innerHTML=diagramImages[activeDiagramIndex]?`<img id="activeComponentDiagram" src="${diagramImages[activeDiagramIndex]}" alt="${esc(displayName(component.name,component.nameEn))}">`:`<div class="diagram-placeholder">${appLanguage==="en"?"No component diagram uploaded. Add it from Control Panel.":"لم تتم إضافة صورة تفصيلية لهذا المكوّن بعد. أضفها من لوحة التحكم."}</div>`;
+ const zoomTools=document.createElement("div");
+ zoomTools.className="diagram-zoom-tools";
+ zoomTools.innerHTML=`<button type="button" aria-label="Zoom out" title="تصغير" data-zoom="out">−</button><span class="zoom-level" id="diagramZoomLevel">100%</span><button type="button" aria-label="Zoom in" title="تكبير" data-zoom="in">+</button><button type="button" class="zoom-reset" data-zoom="reset">إعادة</button><div class="diagram-pan-pad" aria-label="تحريك الصورة"><button type="button" title="تحريك لأعلى" aria-label="Up" data-pan="up">↑</button><button type="button" title="تحريك لليسار" aria-label="Left" data-pan="left">←</button><button type="button" title="تحريك لليمين" aria-label="Right" data-pan="right">→</button><button type="button" title="تحريك لأسفل" aria-label="Down" data-pan="down">↓</button></div>`;
+ stage.appendChild(zoomTools);
+ zoomTools.querySelector('[data-zoom="out"]').onclick=()=>changeDiagramZoom(-0.2);
+ zoomTools.querySelector('[data-zoom="in"]').onclick=()=>changeDiagramZoom(0.2);
+ zoomTools.querySelector('[data-zoom="reset"]').onclick=()=>resetDiagramZoom();
+ zoomTools.querySelectorAll("[data-pan]").forEach(button=>{
+  button.onclick=()=>panDiagram(button.dataset.pan);
+ });
+
+ stage.onwheel=(event)=>{
+  event.preventDefault();
+  changeDiagramZoom(event.deltaY<0?0.12:-0.12);
+ };
+ stage.tabIndex=0;
+ stage.onkeydown=(event)=>{
+  if(["INPUT","TEXTAREA","SELECT"].includes(event.target.tagName))return;
+  const directions={ArrowLeft:"left",ArrowRight:"right",ArrowUp:"up",ArrowDown:"down"};
+  if(directions[event.key]&&diagramZoom>1){
+   event.preventDefault();panDiagram(directions[event.key]);
+  }
+ };
+ stage.onpointerdown=(event)=>{
+  if(event.button!==0)return;
+  if(event.target.closest(".diagram-zoom-tools")||event.target.closest(".diagram-marker"))return;
+  if(diagramZoom<=1)return;
+  event.preventDefault();
+  const image=stage.querySelector("#activeComponentDiagram");
+  if(image)image.draggable=false;
+  diagramPanStart={x:event.clientX-diagramPanX,y:event.clientY-diagramPanY};
+  stage.classList.add("is-panning");
+  stage.setPointerCapture(event.pointerId);
+ };
+ stage.onpointermove=(event)=>{
+  if(!diagramPanStart)return;
+  diagramPanX=event.clientX-diagramPanStart.x;
+  diagramPanY=event.clientY-diagramPanStart.y;
+  applyDiagramTransform();
+ };
+ const stopDiagramPan=()=>{
+  diagramPanStart=null;
+  stage.classList.remove("is-panning");
+ };
+ stage.onpointerup=stopDiagramPan;
+ stage.onpointercancel=stopDiagramPan;
+ stage.onlostpointercapture=stopDiagramPan;
+
  const img=document.getElementById("activeComponentDiagram");
  const drawMarkers=()=>{
   if(!img||!img.isConnected)return;
@@ -847,13 +968,51 @@ function renderActiveComponent(){
    marker.onclick=()=>selectSubpart(i);stage.appendChild(marker);
   });
  };
- if(img){if(img.complete){drawMarkers();requestAnimationFrame(drawMarkers);}else img.onload=()=>{drawMarkers();requestAnimationFrame(drawMarkers);};}
+ if(img){if(img.complete){requestAnimationFrame(()=>{drawMarkers();applyDiagramTransform();});}else img.onload=()=>{requestAnimationFrame(()=>{drawMarkers();applyDiagramTransform();});};}
  if(currentSubpartIndex>=0&&subparts[currentSubpartIndex])showSubpartDetails(currentSubpartIndex);
  else{
   document.getElementById("selectedTitle").textContent=displayName(component.name,component.nameEn);
   document.getElementById("selectedDesc").textContent=appLanguage==="en"?"Select a part to view its details.":"اختر قطعة لعرض بياناتها.";
   document.getElementById("componentList").innerHTML=`<div class="part-data-card"><p class="panel-note">${appLanguage==="en"?"Select a part from the list or click its yellow number on the diagram.":"اختر قطعة من القائمة أو اضغط على رقمها الأصفر في الرسم لعرض بياناتها."}</p></div>`;
   }
+}
+let activeDiagramImageIndex=0;
+let diagramZoom=1,diagramPanX=0,diagramPanY=0,diagramPanStart=null;
+function applyDiagramTransform(){
+ const stage=document.getElementById("machineStage");
+ const img=document.getElementById("activeComponentDiagram");
+ if(img)img.style.transform=`translate(${diagramPanX}px,${diagramPanY}px) scale(${diagramZoom})`;
+ const level=document.getElementById("diagramZoomLevel");
+ if(level)level.textContent=Math.round(diagramZoom*100)+"%";
+ if(stage){
+  stage.querySelectorAll("[data-pan]").forEach(button=>button.disabled=diagramZoom<=1);
+ }
+ if(stage&&img){
+  const subparts=(parts[active]||[])[currentComponentIndex]?.subParts||[];
+  stage.querySelectorAll(".diagram-marker").forEach((marker,i)=>{
+   const p=subparts[i];if(!p)return;
+   const pos=imageRelativeStagePosition(img,stage,p.x,p.y);
+   marker.style.left=pos.left+"%";marker.style.top=pos.top+"%";
+  });
+ }
+}
+function changeDiagramZoom(delta){
+ diagramZoom=Math.max(1,Math.min(3.5,+(diagramZoom+delta).toFixed(2)));
+ if(diagramZoom===1){diagramPanX=0;diagramPanY=0;}
+ applyDiagramTransform();
+}
+function resetDiagramZoom(){
+ diagramZoom=1;diagramPanX=0;diagramPanY=0;diagramPanStart=null;
+ applyDiagramTransform();
+}
+function panDiagram(direction){
+ if(diagramZoom<=1)return;
+ const step=55;
+ if(direction==="left")diagramPanX+=step;
+ if(direction==="right")diagramPanX-=step;
+ if(direction==="up")diagramPanY+=step;
+ if(direction==="down")diagramPanY-=step;
+ applyDiagramTransform();
 }
 function imageRelativeStagePosition(img,stage,x,y){
  const ir=img.getBoundingClientRect(),sr=stage.getBoundingClientRect();
@@ -864,34 +1023,7 @@ function imageRelativeStagePosition(img,stage,x,y){
  return {left:((ir.left-sr.left+offsetX+(x/100)*drawnW)/sr.width)*100,
          top:((ir.top-sr.top+offsetY+(y/100)*drawnH)/sr.height)*100};
 }
-function renderCatalogDiagram(){
- const component=(parts[active]||[])[currentComponentIndex];if(!component)return;
- document.getElementById("modalTitle").textContent=displayName(component.name,component.nameEn)+" · "+displayName(systems.find(g=>g[0]===active)?.[1],systems.find(g=>g[0]===active)?.[3]);
- const subparts=component.subParts||[];
- document.getElementById("partsList").innerHTML=subparts.length?subparts.map((p,i)=>`<button class="catalog-subpart-btn ${i===currentSubpartIndex?"active":""}" onclick="selectSubpart(${i})"><span class="callout-num">${esc(p.callout||String(i+1))}</span><span class="catalog-subpart-text"><strong>${esc(displayName(p.name,p.nameEn))}</strong><small>${esc(p.partNo||(appLanguage==="en"?"Part number not set":"لم يحدد رقم القطعة"))}</small></span></button>`).join(""):'<div class="diagram-placeholder">لم تتم إضافة أجزاء لهذا المكوّن بعد</div>';
- const stage=document.getElementById("diagramStage");
- if(component.drawingImage){
-  stage.innerHTML=`<img id="catalogDiagramImage" src="${component.drawingImage}" alt="الرسم التفصيلي لـ ${esc(component.name)}">`;
-  const img=document.getElementById("catalogDiagramImage");
-  const drawMarkers=()=>{
-   stage.querySelectorAll(".diagram-marker").forEach(n=>n.remove());
-   subparts.forEach((p,i)=>{
-    const pos=imageRelativeStagePosition(img,stage,p.x,p.y);
-    const marker=document.createElement("button");
-    marker.className="diagram-marker"+(i===currentSubpartIndex?" active":"");
-    marker.style.left=pos.left+"%";marker.style.top=pos.top+"%";
-    marker.title=p.name;marker.textContent=p.callout||String(i+1);
-    marker.onclick=()=>selectSubpart(i);stage.appendChild(marker);
-   });
-  };
-  if(img.complete)drawMarkers();else img.onload=drawMarkers;
- }else stage.innerHTML='<div class="diagram-placeholder">لم تتم إضافة صورة تفصيلية لهذا المكوّن بعد<br>يمكن رفع الرسم من لوحة التحكم</div>';
- if(currentSubpartIndex>=0&&subparts[currentSubpartIndex])showSubpartDetails(currentSubpartIndex);
- else{document.getElementById("partForm").style.display="none";document.getElementById("partInfoEmpty").style.display="block";}
-}
-function selectSubpart(index){
- currentSubpartIndex=index;renderCatalogDiagram();
-}
+
 function showSubpartDetails(index){
  const p=(parts[active]||[])[currentComponentIndex]?.subParts?.[index];if(!p)return;
  document.getElementById("selectedTitle").textContent=displayName(p.name,p.nameEn);
@@ -938,81 +1070,9 @@ function renderAdmin(){
  applyAdminLanguage();
 }
 function chooseAdminSystem(id){adminSystemId=id;active=id;expandedSystemId=id;editingPartIndex=-1;render();renderAdmin();clearComponentForm();}
-async function newSystem(){
- const addButton=document.querySelector(".admin-subhead button");
- if(addButton)addButton.disabled=true;
-
- try{
-  // Always retrieve the current Supabase session directly; do not trust a possibly stale global.
-  if(!initSupabase())throw new Error("تعذر تهيئة مكتبة Supabase. أعد تحميل الصفحة وتحقق من اتصال الإنترنت.");
-
-  const {data:sessionData,error:sessionError}=await supabaseClient.auth.getSession();
-  if(sessionError)throw sessionError;
-  supabaseSession=sessionData?.session||null;
-
-  if(!supabaseSession){
-   showSupabaseLogin("انتهت جلسة المدير. سجّل الدخول مرة أخرى لإضافة مجموعة.");
-   return;
-  }
-
-  const isAdmin=await verifySupabaseAdmin(supabaseSession.user.id);
-  if(!isAdmin){
-   await supabaseClient.auth.signOut();
-   supabaseSession=null;
-   showSupabaseLogin("هذا الحساب غير مسجل كمدير في kanara_admins.");
-   return;
-  }
-
-  // Prepare the new catalog without changing the visible/local data until cloud save succeeds.
-  const id="group_"+Date.now();
-  const nextSystems=JSON.parse(JSON.stringify(systems));
-  const nextParts=JSON.parse(JSON.stringify(parts));
-  nextSystems.push([id,"مجموعة جديدة","","New Group",""]);
-  nextParts[id]=[];
-
-  const snapshot={
-   systems:nextSystems,
-   parts:nextParts,
-   savedAt:new Date().toISOString()
-  };
-
-  const result=await pushCatalogToCloud(snapshot);
-  if(!result || result.skipped || !result.saved || !result.snapshot){
-   throw new Error("لم يؤكد Supabase حفظ المجموعة. لم يتم اعتماد التغيير.");
-  }
-
-  // Commit the cloud-confirmed result locally and refresh the admin interface.
-  systems=result.snapshot.systems;
-  parts=result.snapshot.parts;
-  adminSystemId=id;
-  active=id;
-  expandedSystemId=id;
-  editingPartIndex=-1;
-
-  try{
-   await writeCatalogDB({
-    systems:JSON.parse(JSON.stringify(systems)),
-    parts:JSON.parse(JSON.stringify(parts)),
-    savedAt:new Date().toISOString(),
-    source:"supabase"
-   });
-  }catch(localError){
-   console.error("Cloud save succeeded, but local cache update failed:",localError);
-   alert("تم حفظ المجموعة في Supabase، لكن تعذر تحديث النسخة المحلية على هذا الجهاز. أعد تحميل الصفحة لمزامنتها.");
-  }
-
-  render();
-  renderAdmin();
-  const nameField=document.getElementById("adminSystemName");
-  if(nameField)nameField.focus();
-
- }catch(error){
-  console.error("Add group failed:",error);
-  alert("تعذرت إضافة المجموعة.\\nسبب الخطأ: "+(error?.message||String(error))+
-   "\\n\\nإذا كان الخطأ متعلقاً بـ RLS أو row-level security، فتحقق من صلاحيات INSERT وUPDATE لجدول equipment_catalog.");
- }finally{
-  if(addButton)addButton.disabled=false;
- }
+function newSystem(){
+ const id="group_"+Date.now();
+ systems.push([id,"مجموعة جديدة","","New Group",""]);parts[id]=[];adminSystemId=id;editingPartIndex=-1;saveStore();render();renderAdmin();document.getElementById("adminSystemName").focus();
 }
 function saveSystem(){
  const group=systems.find(g=>g[0]===adminSystemId);if(!group)return;
@@ -1041,9 +1101,9 @@ function newComponent(){
 function clearComponentForm(){
  editingPartIndex=-1;
  ["adminPartName","adminPartNameEn","adminPartInfo","adminPartInfoEn","adminPartNotes"].forEach(id=>document.getElementById(id).value="");
- adminDrawingData="";adminPinImageSrc="";
- document.getElementById("adminDrawingFile").value="";
- document.getElementById("adminDrawingPreview").innerHTML="<span>لم يتم اختيار رسم تفصيلي</span>";
+ adminDrawingData="";adminDrawingData2="";adminPinImageSrc="";adminPinImageIndex=0;
+ document.getElementById("adminDrawingFile").value="";document.getElementById("adminDrawingFile2").value="";
+ document.getElementById("adminDrawingPreview").innerHTML="<span>لم يتم اختيار الصورة الأولى</span>";document.getElementById("adminDrawingPreview2").innerHTML="<span>لم يتم اختيار الصورة الثانية</span>";
  document.getElementById("adminComponentFormTitle").textContent="إضافة مكوّن رئيسي جديد";
  document.getElementById("adminSubpartsEditor").style.display="none";
  clearSubpartForm();
@@ -1056,9 +1116,9 @@ function editComponent(index){
  document.getElementById("adminPartInfo").value=p.info||"";
  document.getElementById("adminPartInfoEn").value=p.infoEn||"";
  document.getElementById("adminPartNotes").value=p.notes||"";
- adminDrawingData=p.drawingImage||"";
+ adminDrawingData=p.drawingImage||"";adminDrawingData2=p.drawingImage2||"";adminPinImageIndex=0;
  adminPinImageSrc="";
- document.getElementById("adminDrawingPreview").innerHTML=adminDrawingData?`<img src="${adminDrawingData}" alt="رسم المكوّن">`:"<span>لم يتم اختيار رسم تفصيلي</span>";
+ document.getElementById("adminDrawingPreview").innerHTML=adminDrawingData?`<img src="${adminDrawingData}" alt="رسم المكوّن">`:"<span>لم يتم اختيار الصورة الأولى</span>";document.getElementById("adminDrawingPreview2").innerHTML=adminDrawingData2?`<img src="${adminDrawingData2}" alt="الرسم الثاني">`:"<span>لم يتم اختيار الصورة الثانية</span>";
  document.getElementById("adminComponentFormTitle").textContent=(appLanguage==="en"?"Edit component: ":"تعديل المكوّن الرئيسي: ")+displayName(p.name,p.nameEn);
  document.getElementById("adminSubpartsEditor").style.display="block";
  renderAdminSubparts();clearSubpartForm();
@@ -1068,7 +1128,7 @@ function saveComponent(){
  const name=document.getElementById("adminPartName").value.trim();
  if(!name){alert("اكتب اسم المكوّن أولاً.");return;}
  const previous=editingPartIndex>=0?(parts[adminSystemId]||[])[editingPartIndex]:null;
- const record={name,nameEn:document.getElementById("adminPartNameEn").value.trim(),partNo:previous?.partNo||"",altNo:previous?.altNo||"",info:document.getElementById("adminPartInfo").value.trim(),infoEn:document.getElementById("adminPartInfoEn").value.trim(),notes:document.getElementById("adminPartNotes").value.trim(),drawingImage:adminDrawingData||previous?.drawingImage||"",subParts:previous?.subParts||[]};
+ const record={name,nameEn:document.getElementById("adminPartNameEn").value.trim(),partNo:previous?.partNo||"",altNo:previous?.altNo||"",info:document.getElementById("adminPartInfo").value.trim(),infoEn:document.getElementById("adminPartInfoEn").value.trim(),notes:document.getElementById("adminPartNotes").value.trim(),drawingImage:adminDrawingData||previous?.drawingImage||"",drawingImage2:adminDrawingData2||previous?.drawingImage2||"",subParts:previous?.subParts||[]};
  parts[adminSystemId]=parts[adminSystemId]||[];
  let savedIndex=editingPartIndex;
  if(savedIndex<0){parts[adminSystemId].push(record);savedIndex=parts[adminSystemId].length-1;}
@@ -1083,53 +1143,47 @@ function deleteComponent(index){
  parts[adminSystemId].splice(index,1);saveStore();render();renderAdminParts();clearComponentForm();
 }
 
-let adminDrawingData="";
+let adminDrawingData="",adminDrawingData2="",adminPinImageIndex=0;
 let adminSubpartEditIndex=-1;
 let pendingPin={x:50,y:50};
-function loadAdminDrawing(event){
+function loadAdminDrawing(event,which=1){
  const file=event.target.files?.[0];if(!file)return;
- const reader=new FileReader();
- reader.onload=()=>{
-  const img=new Image();
-  img.onload=()=>{
-   const scale=Math.min(1,1600/Math.max(img.width,img.height));
-   const canvas=document.createElement("canvas");canvas.width=Math.round(img.width*scale);canvas.height=Math.round(img.height*scale);
-   canvas.getContext("2d").drawImage(img,0,0,canvas.width,canvas.height);
-   adminDrawingData=canvas.toDataURL("image/jpeg",0.84);adminPinImageSrc="";
-   document.getElementById("adminDrawingPreview").innerHTML=`<img src="${adminDrawingData}" alt="معاينة الرسم">`;
-   renderAdminPinStage();
-  };
-  img.src=reader.result;
- };
- reader.readAsDataURL(file);
+ const reader=new FileReader();reader.onload=()=>{const img=new Image();img.onload=()=>{
+  const scale=Math.min(1,1600/Math.max(img.width,img.height));const canvas=document.createElement("canvas");canvas.width=Math.round(img.width*scale);canvas.height=Math.round(img.height*scale);canvas.getContext("2d").drawImage(img,0,0,canvas.width,canvas.height);
+  const data=canvas.toDataURL("image/jpeg",0.84);
+  if(which===2){adminDrawingData2=data;document.getElementById("adminDrawingPreview2").innerHTML=`<img src="${data}" alt="معاينة الصورة الثانية">`;}
+  else{adminDrawingData=data;document.getElementById("adminDrawingPreview").innerHTML=`<img src="${data}" alt="معاينة الصورة الأولى">`;}
+  adminPinImageIndex=which===2?1:0;adminPinImageSrc="";renderAdminPinStage();
+ };img.src=reader.result;};reader.readAsDataURL(file);
 }
 function clearAdminDrawing(){
- adminDrawingData="";adminPinImageSrc="";
- document.getElementById("adminDrawingFile").value="";
- document.getElementById("adminDrawingPreview").innerHTML="<span>لم يتم اختيار رسم تفصيلي</span>";
- renderAdminPinStage();
+ adminDrawingData="";adminDrawingData2="";adminPinImageSrc="";adminPinImageIndex=0;
+ document.getElementById("adminDrawingFile").value="";document.getElementById("adminDrawingFile2").value="";
+ document.getElementById("adminDrawingPreview").innerHTML="<span>لم يتم اختيار الصورة الأولى</span>";document.getElementById("adminDrawingPreview2").innerHTML="<span>لم يتم اختيار الصورة الثانية</span>";renderAdminPinStage();
 }
+function selectAdminPinImage(index){adminPinImageIndex=index===1?1:0;adminPinImageSrc="";renderAdminPinStage();}
 function currentAdminComponent(){
  return editingPartIndex>=0?(parts[adminSystemId]||[])[editingPartIndex]:null;
 }
 let adminPinImageSrc="";
 function renderAdminPinStage(){
  const stage=document.getElementById("adminPinStage");if(!stage)return;
- if(!adminDrawingData){
+ const selectedAdminDrawing=adminPinImageIndex===1?adminDrawingData2:adminDrawingData;
+ if(!selectedAdminDrawing){
   if(adminPinImageSrc||stage.childElementCount)stage.innerHTML="<span>ارفع صورة الرسم أولاً</span>";
   adminPinImageSrc="";
   stage.onclick=null;
   return;
  }
  let img=document.getElementById("adminPinImage");
- if(!img||adminPinImageSrc!==adminDrawingData){
+ if(!img||adminPinImageSrc!==selectedAdminDrawing){
   stage.innerHTML="";
   img=document.createElement("img");
   img.id="adminPinImage";
   img.alt="الرسم لتحديد مواضع الأجزاء";
-  img.src=adminDrawingData;
+  img.src=selectedAdminDrawing;
   stage.appendChild(img);
-  adminPinImageSrc=adminDrawingData;
+  adminPinImageSrc=selectedAdminDrawing;
   img.addEventListener("load",drawAdminPins,{once:true});
  }
  // Rebind on every render/edit. Previously this handler was only assigned when
