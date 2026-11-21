@@ -56,6 +56,24 @@ main{height:calc(100vh - 80px);min-height:700px;display:grid;grid-template-colum
 @media(max-width:700px){header{height:auto;min-height:70px;flex-wrap:wrap;padding:10px}nav{display:none}main{display:flex;flex-direction:column;padding:8px}.center{height:460px;order:1}.sidebar{order:2}.right{order:3;display:flex}.bottom{order:4;min-height:110px}.sysbtn{min-height:42px}}
 
 
+/* Additional explanatory image gallery per component */
+.machineview.component-mode.gallery-visible #machineStage{bottom:92px;height:auto}
+.component-extra-gallery{display:none;position:absolute;left:0;right:0;bottom:0;height:88px;z-index:12;align-items:center;gap:9px;padding:7px 12px;background:#172330ed;border-top:1px solid #526579;overflow-x:auto;overflow-y:hidden}
+.machineview.component-mode.gallery-visible .component-extra-gallery{display:flex}
+.extra-gallery-title{flex:0 0 auto;color:#f5b91b;font:800 12px Tajawal;padding:0 8px}
+.extra-gallery-thumb{flex:0 0 68px;width:68px;height:68px;border:1px solid #61758a;border-radius:7px;background:#f5f5f1;padding:2px;cursor:pointer;overflow:hidden}
+.extra-gallery-thumb:hover{border:2px solid #f5b91b}
+.extra-gallery-thumb img{width:100%;height:100%;object-fit:contain}
+.extra-image-viewer{position:fixed;inset:0;z-index:300;background:#050b12ed;display:none;align-items:center;justify-content:center;padding:24px}
+.extra-image-viewer.open{display:flex}
+.extra-image-viewer img{max-width:94vw;max-height:90vh;object-fit:contain;background:#f5f5f1;border-radius:8px}
+.extra-image-close{position:absolute;top:18px;right:22px;width:42px;height:42px;border:1px solid #718398;border-radius:9px;background:#243446;color:white;font-size:26px;cursor:pointer}
+.admin-extra-gallery{margin-top:14px;padding:12px;border:1px solid #455b70;border-radius:9px;background:#14212d}
+.admin-extra-gallery-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:9px;margin-top:10px}
+.admin-extra-gallery-item{position:relative;min-height:105px;background:#f3f3ef;border:1px solid #60758a;border-radius:8px;overflow:hidden;display:grid;place-items:center}
+.admin-extra-gallery-item img{width:100%;height:100px;object-fit:contain}
+.admin-extra-gallery-item button{position:absolute;top:4px;left:4px;background:#a92323;color:white;border:0;border-radius:5px;padding:3px 7px;cursor:pointer}
+.admin-extra-gallery-item small{position:absolute;right:5px;bottom:4px;background:#172330dd;color:white;border-radius:4px;padding:2px 5px}
 /* Professional system components panel */
 .right.panel{display:flex;flex-direction:column;min-height:0;overflow:hidden}
 .system-kicker{font-size:11px;color:#aebfd0;letter-spacing:.3px;margin:4px 0 5px}
@@ -394,7 +412,9 @@ html[dir="ltr"] .diagram-zoom-tools{right:auto;left:12px}
 
 
 <div class="viewtools"><button id="real3dToggle" onclick="toggleReal3D()">عرض المجسم ثلاثي الأبعاد</button></div>
+<div id="componentExtraGallery" class="component-extra-gallery" aria-label="صور توضيحية إضافية"></div>
 </div></section>
+<div id="extraImageViewer" class="extra-image-viewer" onclick="closeAdditionalImage(event)"><button class="extra-image-close" type="button" onclick="closeAdditionalImage(event)">×</button><img id="extraImageViewerImage" alt="صورة توضيحية مكبرة"></div>
 <aside class="right panel" id="systemPanel">
 <div class="preview" id="preview">⚙️</div>
 <div class="system-kicker">المجموعة المحددة</div>
@@ -484,15 +504,18 @@ html[dir="ltr"] .diagram-zoom-tools{right:auto;left:12px}
        <label>الصورة التفصيلية الأولى</label>
        <input id="adminDrawingFile" type="file" accept="image/*" onchange="loadAdminDrawing(event,1)">
        <div id="adminDrawingPreview" class="admin-drawing-preview"><span>لم يتم اختيار الصورة الأولى</span></div>
-       <label>الصورة التفصيلية الثانية (اختيارية)</label>
-       <input id="adminDrawingFile2" type="file" accept="image/*" onchange="loadAdminDrawing(event,2)">
-       <div id="adminDrawingPreview2" class="admin-drawing-preview"><span>لم يتم اختيار الصورة الثانية</span></div>
-       <button type="button" class="cancel-btn" onclick="clearAdminDrawing()">إزالة الصور</button>
+       <button type="button" class="cancel-btn" onclick="clearAdminDrawing()">إزالة الرسم الأساسي</button>
+      </div>
+      <div class="admin-extra-gallery">
+       <label>صور توضيحية إضافية لهذا المكوّن (يمكن اختيار عدة صور)</label>
+       <input id="adminAdditionalImages" type="file" accept="image/*" multiple onchange="loadAdditionalImages(event)">
+       <div class="small">كل صورة إضافية لها قائمة قطع مستقلة؛ اضغط «إدارة أرقام القطع» لتحديد العلامات وإضافة بياناتها.</div>
+       <div id="adminAdditionalImagesPreview" class="admin-extra-gallery-list"></div>
       </div>
       <div class="admin-subparts-editor" id="adminSubpartsEditor" style="display:none">
        <div class="admin-section-title"><div><span class="admin-kicker">COMPONENT PARTS</span><h4>المرحلة الثانية: قطع هذا المكوّن</h4></div><span id="adminSubpartCount" class="workspace-count">0</span></div>
        <p class="admin-hint">بعد حفظ المكوّن الرئيسي، أضف هنا قطع المكوّن: اسم القطعة ورقمها والكمية ورقم الإشارة على الرسم.</p>
-       <div style="display:flex;gap:8px;margin:8px 0"><button type="button" class="cancel-btn" onclick="selectAdminPinImage(0)">تحديد الأرقام على الصورة الأولى</button><button type="button" class="cancel-btn" onclick="selectAdminPinImage(1)">تحديد الأرقام على الصورة الثانية</button></div><div id="adminPinStage" class="admin-pin-stage"><span>ارفع صورة الرسم أولاً</span></div>
+       <div style="display:flex;gap:8px;margin:8px 0"><button type="button" class="cancel-btn" onclick="selectAdminPinImage(0)">تحديد الأرقام على الرسم الأساسي</button></div><div id="adminPinStage" class="admin-pin-stage"><span>ارفع صورة الرسم أولاً</span></div>
        <div class="admin-subpart-form">
         <div class="formgrid"><div><label>اسم القطعة بالعربية</label><input id="adminSubName" placeholder="مثال: الماسورة"></div><div><label>اسم القطعة بالإنجليزية</label><input id="adminSubNameEn" placeholder="Example: Hose" dir="ltr"></div></div>
         <div class="formgrid"><div><label>رقم القطعة</label><input id="adminSubNo" placeholder="Part Number" dir="ltr"></div><div><label>الرقم البديل</label><input id="adminSubAlt" placeholder="Alternative Number" dir="ltr"></div></div>
@@ -542,7 +565,7 @@ function normalizeData(raw){
  const nextParts={};
  nextSystems.forEach(g=>{
   const arr=(raw.parts&&raw.parts[g[0]])||defaultParts[g[0]]||[];
-  nextParts[g[0]]=arr.map(v=>typeof v==="string"?{name:v,nameEn:"",partNo:"",altNo:"",info:"",infoEn:"",notes:"",notesEn:"",drawingImage:"",subParts:[]}:{name:v.name||"",nameEn:v.nameEn||"",partNo:v.partNo||"",altNo:v.altNo||"",info:v.info||"",infoEn:v.infoEn||"",notes:v.notes||"",notesEn:v.notesEn||"",drawingImage:v.drawingImage||"",drawingImage2:v.drawingImage2||"",subParts:Array.isArray(v.subParts)?v.subParts.map(x=>({name:x.name||"",nameEn:x.nameEn||"",partNo:x.partNo||"",altNo:x.altNo||"",info:x.info||"",infoEn:x.infoEn||"",notes:x.notes||"",notesEn:x.notesEn||"",callout:x.callout||"",qty:x.qty??"",x:Number(x.x)||0,y:Number(x.y)||0})):[]});
+  nextParts[g[0]]=arr.map(v=>typeof v==="string"?{name:v,nameEn:"",partNo:"",altNo:"",info:"",infoEn:"",notes:"",notesEn:"",drawingImage:"",subParts:[]}:{name:v.name||"",nameEn:v.nameEn||"",partNo:v.partNo||"",altNo:v.altNo||"",info:v.info||"",infoEn:v.infoEn||"",notes:v.notes||"",notesEn:v.notesEn||"",drawingImage:v.drawingImage||"",drawingImage2:v.drawingImage2||"",additionalImages:Array.isArray(v.additionalImages)?v.additionalImages.filter(x=>typeof x==="string"&&x):[],additionalImageParts:Array.isArray(v.additionalImageParts)?v.additionalImageParts.map(x=>({subParts:Array.isArray(x?.subParts)?x.subParts.map(q=>({...q,x:Number(q.x)||0,y:Number(q.y)||0})):[]})):(Array.isArray(v.additionalImages)?v.additionalImages.map(()=>({subParts:[]})):[]),subParts:Array.isArray(v.subParts)?v.subParts.map(x=>({name:x.name||"",nameEn:x.nameEn||"",partNo:x.partNo||"",altNo:x.altNo||"",info:x.info||"",infoEn:x.infoEn||"",notes:x.notes||"",notesEn:x.notesEn||"",callout:x.callout||"",qty:x.qty??"",x:Number(x.x)||0,y:Number(x.y)||0})):[]});
  });
  return {systems:nextSystems.map(g=>[String(g[0]),String(g[1]||""),String(g[2]||""),String(g[3]||""),String(g[4]||"")]),parts:nextParts};
 }
@@ -647,7 +670,7 @@ async function uploadCatalogImages(value){
  if(Array.isArray(value)){for(let i=0;i<value.length;i++)value[i]=await uploadCatalogImages(value[i]);return value;}
  if(value&&typeof value==="object"){
   for(const key of Object.keys(value)){
-   if(key==="drawingImage" && typeof value[key]==="string" && value[key].startsWith("data:image/")){
+   if(typeof value[key]==="string" && value[key].startsWith("data:image/")){
     const response=await fetch(value[key]);
     const blob=await response.blob();
     const ext=(blob.type.split("/")[1]||"jpg").replace("jpeg","jpg");
@@ -873,7 +896,7 @@ function showHome(){
 function openComponent(systemId,index){
  const component=(parts[systemId]||[])[index];if(!component)return;
  active=systemId;expandedSystemId=systemId;currentView="component";
- currentComponentIndex=index;currentSubpartIndex=-1;activeDiagramImageIndex=0;
+ currentComponentIndex=index;currentSubpartIndex=-1;activeDiagramImageIndex=0;activeExtraImageIndex=-1;
  resetDiagramZoom();
  render();
  document.getElementById("machineView").classList.remove("real-3d");
@@ -891,11 +914,76 @@ function openComponent(systemId,index){
  document.getElementById("componentCount").style.display="none";
  renderActiveComponent();
 }
+function renderComponentExtraGallery(component){
+ const gallery=document.getElementById("componentExtraGallery");
+ const images=Array.isArray(component.additionalImages)?component.additionalImages:[];
+ const machineView=document.getElementById("machineView");
+ gallery.innerHTML="";
+ machineView.classList.toggle("gallery-visible",images.length>0);
+ if(!images.length)return;
+ const title=document.createElement("span");title.className="extra-gallery-title";title.textContent=appLanguage==="en"?`Additional images (${images.length})`:`صور توضيحية (${images.length})`;gallery.appendChild(title);
+ images.forEach((src,index)=>{
+  const button=document.createElement("button");button.type="button";button.className="extra-gallery-thumb";button.title=(appLanguage==="en"?"Open image ":"عرض الصورة ")+(index+1);button.onclick=()=>selectExtraDiagram(index);
+  const img=document.createElement("img");img.loading="lazy";img.decoding="async";img.src=src;img.alt=(appLanguage==="en"?"Additional image ":"صورة توضيحية ")+(index+1);button.appendChild(img);gallery.appendChild(button);
+ });
+}
+function selectExtraDiagram(index){
+ const component=(parts[active]||[])[currentComponentIndex];if(!component||!component.additionalImages?.[index])return;
+ activeExtraImageIndex=index;currentSubpartIndex=-1;resetDiagramZoom();renderActiveComponent();
+}
+function activeComponentSubparts(component){
+ if(activeExtraImageIndex>=0){
+  component.additionalImageParts=Array.isArray(component.additionalImageParts)?component.additionalImageParts:[];
+  component.additionalImageParts[activeExtraImageIndex]=component.additionalImageParts[activeExtraImageIndex]||{subParts:[]};
+  return component.additionalImageParts[activeExtraImageIndex].subParts;
+ }
+ return component.subParts||[];
+}
+function openAdditionalImage(index){
+ const component=(parts[active]||[])[currentComponentIndex];const src=component?.additionalImages?.[index];if(!src)return;
+ const viewer=document.getElementById("extraImageViewer");const image=document.getElementById("extraImageViewerImage");image.src=src;viewer.classList.add("open");
+}
+function closeAdditionalImage(event){
+ if(event&&event.target&&event.target.id==="extraImageViewerImage")return;
+ document.getElementById("extraImageViewer")?.classList.remove("open");
+}
+document.addEventListener("keydown",event=>{if(event.key==="Escape")document.getElementById("extraImageViewer")?.classList.remove("open");});
+let adminAdditionalImageData=[];
+let adminAdditionalImagePartsData=[];
+let adminExtraImageIndex=-1;
+let activeExtraImageIndex=-1;
+function renderAdminAdditionalImages(){
+ const host=document.getElementById("adminAdditionalImagesPreview");if(!host)return;
+ host.innerHTML="";
+ adminAdditionalImageData.forEach((src,index)=>{
+  const item=document.createElement("div");item.className="admin-extra-gallery-item";
+  const img=document.createElement("img");img.src=src;img.alt="صورة توضيحية "+(index+1);img.loading="lazy";img.decoding="async";item.appendChild(img);
+  const remove=document.createElement("button");remove.type="button";remove.textContent="×";remove.title="حذف الصورة";remove.onclick=(event)=>{event.preventDefault();event.stopPropagation();adminAdditionalImageData.splice(index,1);adminAdditionalImagePartsData.splice(index,1);const c=currentAdminComponent();if(c)c.additionalImageParts=adminAdditionalImagePartsData;if(adminExtraImageIndex===index)adminExtraImageIndex=-1;else if(adminExtraImageIndex>index)adminExtraImageIndex--;renderAdminAdditionalImages();renderAdminSubparts();};item.appendChild(remove);
+  const editParts=document.createElement("button");editParts.type="button";editParts.textContent="إدارة أرقام القطع";editParts.style.cssText="position:absolute;left:4px;right:4px;bottom:4px;top:auto;background:#20384d;color:#fff;border:1px solid #71869a;border-radius:5px;padding:4px;font:700 10px Tajawal";editParts.onclick=()=>{adminExtraImageIndex=index;adminPinImageIndex=0;adminPinImageSrc="";clearSubpartForm();document.getElementById("adminSubpartsEditor").style.display="block";renderAdminSubparts();document.getElementById("adminSubpartsEditor").scrollIntoView({behavior:"smooth",block:"nearest"});};item.appendChild(editParts);
+  const label=document.createElement("small");label.textContent=(appLanguage==="en"?"Image ":"الصورة ")+(index+2);item.appendChild(label);host.appendChild(item);
+ });
+}
+function loadAdditionalImages(event){
+ const files=Array.from(event.target.files||[]);if(!files.length)return;
+ const allowed=files.filter(file=>file.type.startsWith("image/"));
+ let pending=allowed.length;
+ if(!pending){event.target.value="";return;}
+ allowed.forEach(file=>{
+  const reader=new FileReader();reader.onload=()=>{
+   const image=new Image();image.onload=()=>{
+    const scale=Math.min(1,1600/Math.max(image.width,image.height));const canvas=document.createElement("canvas");canvas.width=Math.max(1,Math.round(image.width*scale));canvas.height=Math.max(1,Math.round(image.height*scale));
+    const context=canvas.getContext("2d");context.drawImage(image,0,0,canvas.width,canvas.height);
+    adminAdditionalImageData.push(canvas.toDataURL("image/jpeg",0.82));adminAdditionalImagePartsData.push({subParts:[]});const c=currentAdminComponent();if(c)c.additionalImageParts=adminAdditionalImagePartsData;pending--;if(!pending)renderAdminAdditionalImages();
+   };image.onerror=()=>{pending--;if(!pending)renderAdminAdditionalImages();};image.src=reader.result;
+  };reader.onerror=()=>{pending--;if(!pending)renderAdminAdditionalImages();};reader.readAsDataURL(file);
+ });
+ event.target.value="";
+}
 function renderActiveComponent(){
  const component=(parts[active]||[])[currentComponentIndex];if(!component)return;
  document.getElementById("componentList").style.display="block";
  document.getElementById("componentCount").style.display="inline-block";
- const subparts=component.subParts||[];
+ const subparts=activeComponentSubparts(component);
  document.getElementById("componentPartsNav").hidden=false;
  document.getElementById("componentPartsTitle").textContent=(appLanguage==="en"?"Parts of: ":"أجزاء: ")+displayName(component.name,component.nameEn);
  document.getElementById("componentPartsList").innerHTML=subparts.length?subparts.map((p,i)=>`<button class="component-part-link ${i===currentSubpartIndex?"active":""}" onclick="selectSubpart(${i})"><span class="part-num">${esc(p.callout||String(i+1))}</span><span class="part-label">${esc(displayName(p.name,p.nameEn))}<small>${esc(p.partNo||(appLanguage==="en"?"Part number not set":"لم يحدد رقم القطعة"))}</small></span></button>`).join(""):`<div class="system-component-empty">${appLanguage==="en"?"No parts added to this component yet":"لم تتم إضافة أجزاء لهذا المكوّن بعد"}</div>`;
@@ -904,22 +992,27 @@ function renderActiveComponent(){
  document.getElementById("component-heading-title").textContent=appLanguage==="en"?"Selected Part Details":"بيانات القطعة المحددة";
  document.getElementById("componentCount").textContent=subparts.length;
  const stage=document.getElementById("machineStage");
- const diagramImages=[component.drawingImage,component.drawingImage2].filter(Boolean);
+ renderComponentExtraGallery(component);
+ const diagramImages=[component.drawingImage].filter(Boolean);
  let activeDiagramIndex=Math.min(activeDiagramImageIndex,Math.max(0,diagramImages.length-1));
  activeDiagramImageIndex=activeDiagramIndex;
  const modelTabs=document.getElementById("modelTabs");
- modelTabs.innerHTML=`<button type="button" class="${activeDiagramIndex===0?"active":""}" data-top-diagram="0">${appLanguage==="en"?"Image 1":"الصورة 1"}</button><button type="button" class="${activeDiagramIndex===1?"active":""}" data-top-diagram="1" ${diagramImages.length<2?"hidden":""}>${appLanguage==="en"?"Image 2":"الصورة 2"}</button>`;
+ modelTabs.innerHTML=`<button type="button" class="${activeExtraImageIndex<0&&activeDiagramIndex===0?"active":""}" data-top-diagram="0">${appLanguage==="en"?"Image 1":"الصورة 1"}</button><button type="button" class="${activeExtraImageIndex<0&&activeDiagramIndex===1?"active":""}" data-top-diagram="1" ${diagramImages.length<2?"hidden":""}>${appLanguage==="en"?"Image 2":"الصورة 2"}</button>`+(component.additionalImages||[]).map((src,i)=>`<button type="button" class="${activeExtraImageIndex===i?"active":""}" data-extra-diagram="${i}">${appLanguage==="en"?"Image ":"الصورة "}${i+2}</button>`).join("");
  const topDiagramButtons=()=>modelTabs.querySelectorAll("[data-top-diagram]");
  const switchDiagramImage=(next)=>{
-  if(next===activeDiagramIndex||!diagramImages[next])return;
-  activeDiagramIndex=next;activeDiagramImageIndex=next;resetDiagramZoom();
+  if((next===activeDiagramIndex&&activeExtraImageIndex<0)||!diagramImages[next])return;
+  const wasExtraImage=activeExtraImageIndex>=0;
+  activeExtraImageIndex=-1;activeDiagramIndex=next;activeDiagramImageIndex=next;resetDiagramZoom();
+  if(wasExtraImage){renderActiveComponent();return;}
   const image=stage.querySelector("#activeComponentDiagram");
   image.onload=()=>{drawMarkers();applyDiagramTransform();};
   image.decoding="async";image.src=diagramImages[next];
   topDiagramButtons().forEach(b=>b.classList.toggle("active",Number(b.dataset.topDiagram)===next));
  }; 
  topDiagramButtons().forEach(button=>button.onclick=()=>switchDiagramImage(Number(button.dataset.topDiagram)));
- stage.innerHTML=diagramImages[activeDiagramIndex]?`<img decoding="async" id="activeComponentDiagram" src="${diagramImages[activeDiagramIndex]}" alt="${esc(displayName(component.name,component.nameEn))}">`:`<div class="diagram-placeholder">${appLanguage==="en"?"No component diagram uploaded. Add it from Control Panel.":"لم تتم إضافة صورة تفصيلية لهذا المكوّن بعد. أضفها من لوحة التحكم."}</div>`;
+ modelTabs.querySelectorAll("[data-extra-diagram]").forEach(button=>button.onclick=()=>selectExtraDiagram(Number(button.dataset.extraDiagram)));
+ const activeDiagramSrc=activeExtraImageIndex>=0?component.additionalImages?.[activeExtraImageIndex]:diagramImages[activeDiagramIndex];
+ stage.innerHTML=activeDiagramSrc?`<img decoding="async" id="activeComponentDiagram" src="${activeDiagramSrc}" alt="${esc(displayName(component.name,component.nameEn))}">`:`<div class="diagram-placeholder">${appLanguage==="en"?"No component diagram uploaded. Add it from Control Panel.":"لم تتم إضافة صورة تفصيلية لهذا المكوّن بعد. أضفها من لوحة التحكم."}</div>`;
  const zoomTools=document.createElement("div");
  zoomTools.className="diagram-zoom-tools";zoomTools.hidden=diagramToolsHidden;
  zoomTools.innerHTML=`<button type="button" aria-label="Zoom out" title="تصغير" data-zoom="out">−</button><span class="zoom-level" id="diagramZoomLevel">100%</span><button type="button" aria-label="Zoom in" title="تكبير" data-zoom="in">+</button><button type="button" class="zoom-reset" data-zoom="reset">إعادة</button><div class="diagram-pan-pad" aria-label="تحريك الصورة"><button type="button" title="تحريك لأعلى" aria-label="Up" data-pan="up">↑</button><button type="button" title="تحريك لليسار" aria-label="Left" data-pan="left">←</button><button type="button" title="تحريك لليمين" aria-label="Right" data-pan="right">→</button><button type="button" title="تحريك لأسفل" aria-label="Down" data-pan="down">↓</button></div>`;
@@ -1009,7 +1102,8 @@ function applyDiagramTransform(){
   stage.querySelectorAll("[data-pan]").forEach(button=>button.disabled=diagramZoom<=1);
  }
  if(stage&&img){
-  const subparts=(parts[active]||[])[currentComponentIndex]?.subParts||[];
+  const activeComponent=(parts[active]||[])[currentComponentIndex];
+  const subparts=activeComponent?activeComponentSubparts(activeComponent):[];
   stage.querySelectorAll(".diagram-marker").forEach((marker,i)=>{
    const p=subparts[i];if(!p)return;
    const pos=imageRelativeStagePosition(img,stage,p.x,p.y);
@@ -1046,7 +1140,7 @@ function imageRelativeStagePosition(img,stage,x,y){
 }
 
 function showSubpartDetails(index){
- const p=(parts[active]||[])[currentComponentIndex]?.subParts?.[index];if(!p)return;
+ const component=(parts[active]||[])[currentComponentIndex];const p=component?activeComponentSubparts(component)[index]:null;if(!p)return;
  document.getElementById("selectedTitle").textContent=displayName(p.name,p.nameEn);
  document.getElementById("selectedDesc").textContent=displayName(p.info,p.infoEn)||(appLanguage==="en"?"Part details":"بيانات القطعة");
  const rows=[
@@ -1122,9 +1216,10 @@ function newComponent(){
 function clearComponentForm(){
  editingPartIndex=-1;
  ["adminPartName","adminPartNameEn","adminPartInfo","adminPartInfoEn","adminPartNotes"].forEach(id=>document.getElementById(id).value="");
- adminDrawingData="";adminDrawingData2="";adminPinImageSrc="";adminPinImageIndex=0;
- document.getElementById("adminDrawingFile").value="";document.getElementById("adminDrawingFile2").value="";
- document.getElementById("adminDrawingPreview").innerHTML="<span>لم يتم اختيار الصورة الأولى</span>";document.getElementById("adminDrawingPreview2").innerHTML="<span>لم يتم اختيار الصورة الثانية</span>";
+ adminDrawingData="";adminDrawingData2="";adminAdditionalImageData=[];adminAdditionalImagePartsData=[];adminExtraImageIndex=-1;adminPinImageSrc="";adminPinImageIndex=0;
+ document.getElementById("adminAdditionalImages").value="";renderAdminAdditionalImages();
+ document.getElementById("adminDrawingFile").value="";
+ document.getElementById("adminDrawingPreview").innerHTML="<span>لم يتم اختيار الرسم الأساسي</span>";
  document.getElementById("adminComponentFormTitle").textContent="إضافة مكوّن رئيسي جديد";
  document.getElementById("adminSubpartsEditor").style.display="none";
  clearSubpartForm();
@@ -1137,9 +1232,9 @@ function editComponent(index){
  document.getElementById("adminPartInfo").value=p.info||"";
  document.getElementById("adminPartInfoEn").value=p.infoEn||"";
  document.getElementById("adminPartNotes").value=p.notes||"";
- adminDrawingData=p.drawingImage||"";adminDrawingData2=p.drawingImage2||"";adminPinImageIndex=0;
+ adminDrawingData=p.drawingImage||"";adminDrawingData2=p.drawingImage2||"";adminAdditionalImageData=Array.isArray(p.additionalImages)?[...p.additionalImages]:[];adminAdditionalImagePartsData=Array.isArray(p.additionalImageParts)?p.additionalImageParts.map(x=>({subParts:Array.isArray(x?.subParts)?x.subParts.map(q=>({...q})):[]})):[];while(adminAdditionalImagePartsData.length<adminAdditionalImageData.length)adminAdditionalImagePartsData.push({subParts:[]});adminAdditionalImagePartsData.length=adminAdditionalImageData.length;p.additionalImageParts=adminAdditionalImagePartsData;adminExtraImageIndex=-1;renderAdminAdditionalImages();adminPinImageIndex=0;
  adminPinImageSrc="";
- document.getElementById("adminDrawingPreview").innerHTML=adminDrawingData?`<img src="${adminDrawingData}" alt="رسم المكوّن">`:"<span>لم يتم اختيار الصورة الأولى</span>";document.getElementById("adminDrawingPreview2").innerHTML=adminDrawingData2?`<img src="${adminDrawingData2}" alt="الرسم الثاني">`:"<span>لم يتم اختيار الصورة الثانية</span>";
+ document.getElementById("adminDrawingPreview").innerHTML=adminDrawingData?`<img src="${adminDrawingData}" alt="رسم المكوّن">`:"<span>لم يتم اختيار الرسم الأساسي</span>";
  document.getElementById("adminComponentFormTitle").textContent=(appLanguage==="en"?"Edit component: ":"تعديل المكوّن الرئيسي: ")+displayName(p.name,p.nameEn);
  document.getElementById("adminSubpartsEditor").style.display="block";
  renderAdminSubparts();clearSubpartForm();
@@ -1149,7 +1244,7 @@ function saveComponent(){
  const name=document.getElementById("adminPartName").value.trim();
  if(!name){alert("اكتب اسم المكوّن أولاً.");return;}
  const previous=editingPartIndex>=0?(parts[adminSystemId]||[])[editingPartIndex]:null;
- const record={name,nameEn:document.getElementById("adminPartNameEn").value.trim(),partNo:previous?.partNo||"",altNo:previous?.altNo||"",info:document.getElementById("adminPartInfo").value.trim(),infoEn:document.getElementById("adminPartInfoEn").value.trim(),notes:document.getElementById("adminPartNotes").value.trim(),drawingImage:adminDrawingData||previous?.drawingImage||"",drawingImage2:adminDrawingData2||previous?.drawingImage2||"",subParts:previous?.subParts||[]};
+ const record={name,nameEn:document.getElementById("adminPartNameEn").value.trim(),partNo:previous?.partNo||"",altNo:previous?.altNo||"",info:document.getElementById("adminPartInfo").value.trim(),infoEn:document.getElementById("adminPartInfoEn").value.trim(),notes:document.getElementById("adminPartNotes").value.trim(),drawingImage:adminDrawingData||previous?.drawingImage||"",drawingImage2:"",additionalImages:[...adminAdditionalImageData],additionalImageParts:adminAdditionalImagePartsData.slice(0,adminAdditionalImageData.length).map(x=>({subParts:Array.isArray(x?.subParts)?x.subParts.map(q=>({...q})):[]})),subParts:previous?.subParts||[]};
  parts[adminSystemId]=parts[adminSystemId]||[];
  let savedIndex=editingPartIndex;
  if(savedIndex<0){parts[adminSystemId].push(record);savedIndex=parts[adminSystemId].length-1;}
@@ -1172,24 +1267,29 @@ function loadAdminDrawing(event,which=1){
  const reader=new FileReader();reader.onload=()=>{const img=new Image();img.onload=()=>{
   const scale=Math.min(1,1600/Math.max(img.width,img.height));const canvas=document.createElement("canvas");canvas.width=Math.round(img.width*scale);canvas.height=Math.round(img.height*scale);canvas.getContext("2d").drawImage(img,0,0,canvas.width,canvas.height);
   const data=canvas.toDataURL("image/jpeg",0.84);
-  if(which===2){adminDrawingData2=data;document.getElementById("adminDrawingPreview2").innerHTML=`<img src="${data}" alt="معاينة الصورة الثانية">`;}
-  else{adminDrawingData=data;document.getElementById("adminDrawingPreview").innerHTML=`<img src="${data}" alt="معاينة الصورة الأولى">`;}
-  adminPinImageIndex=which===2?1:0;adminPinImageSrc="";renderAdminPinStage();
+  adminDrawingData=data;
+  adminPinImageIndex=0;adminPinImageSrc="";renderAdminPinStage();
+
  };img.src=reader.result;};reader.readAsDataURL(file);
 }
 function clearAdminDrawing(){
- adminDrawingData="";adminDrawingData2="";adminPinImageSrc="";adminPinImageIndex=0;
- document.getElementById("adminDrawingFile").value="";document.getElementById("adminDrawingFile2").value="";
- document.getElementById("adminDrawingPreview").innerHTML="<span>لم يتم اختيار الصورة الأولى</span>";document.getElementById("adminDrawingPreview2").innerHTML="<span>لم يتم اختيار الصورة الثانية</span>";renderAdminPinStage();
+ adminDrawingData="";adminPinImageSrc="";adminPinImageIndex=0;
+ document.getElementById("adminDrawingFile").value="";
+ document.getElementById("adminDrawingPreview").innerHTML="<span>لم يتم اختيار الرسم الأساسي</span>";renderAdminPinStage();
 }
-function selectAdminPinImage(index){adminPinImageIndex=index===1?1:0;adminPinImageSrc="";renderAdminPinStage();}
+function selectAdminPinImage(index){adminExtraImageIndex=-1;adminPinImageIndex=index===1?1:0;adminPinImageSrc="";renderAdminSubparts();}
 function currentAdminComponent(){
  return editingPartIndex>=0?(parts[adminSystemId]||[])[editingPartIndex]:null;
+}
+function currentAdminSubparts(){
+ const c=currentAdminComponent();if(!c)return [];
+ if(adminExtraImageIndex>=0){adminAdditionalImagePartsData[adminExtraImageIndex]=adminAdditionalImagePartsData[adminExtraImageIndex]||{subParts:[]};c.additionalImageParts=adminAdditionalImagePartsData;return c.additionalImageParts[adminExtraImageIndex].subParts;}
+ c.subParts=c.subParts||[];return c.subParts;
 }
 let adminPinImageSrc="";
 function renderAdminPinStage(){
  const stage=document.getElementById("adminPinStage");if(!stage)return;
- const selectedAdminDrawing=adminPinImageIndex===1?adminDrawingData2:adminDrawingData;
+ const selectedAdminDrawing=adminExtraImageIndex>=0?adminAdditionalImageData[adminExtraImageIndex]:adminDrawingData;
  if(!selectedAdminDrawing){
   if(adminPinImageSrc||stage.childElementCount)stage.innerHTML="<span>ارفع صورة الرسم أولاً</span>";
   adminPinImageSrc="";
@@ -1246,7 +1346,7 @@ function drawAdminPins(){
  const img=document.getElementById("adminPinImage");
  if(!stage||!img||!img.naturalWidth)return;
  const fragment=document.createDocumentFragment();
- const pins=currentAdminComponent()?.subParts||[];
+ const pins=currentAdminSubparts();
  pins.forEach((p,i)=>{
   const pos=imageRelativeStagePosition(img,stage,p.x,p.y);
   const pin=document.createElement("span");
@@ -1272,7 +1372,7 @@ function drawAdminPins(){
 }
 function renderAdminSubparts(){
  const list=document.getElementById("adminSubpartList");if(!list)return;
- const rows=currentAdminComponent()?.subParts||[];
+ const rows=currentAdminSubparts();
  document.getElementById("adminSubpartCount").textContent=rows.length;
  list.innerHTML=rows.length?rows.map((p,i)=>`<div class="admin-subpart-row"><span>${esc(p.callout||i+1)} · ${esc(displayName(p.name,p.nameEn))} ${p.partNo?"— "+esc(p.partNo):""} ${p.qty?"· الكمية: "+esc(p.qty):""}</span><button class="admin-part-edit" onclick="editSubpart(${i})">تعديل</button><button class="admin-part-delete" onclick="deleteSubpart(${i})">حذف</button></div>`).join(""):'<div class="admin-empty">لا توجد أجزاء مرقمة بعد</div>';
  renderAdminPinStage();
@@ -1283,7 +1383,7 @@ function clearSubpartForm(){
  ["adminSubName","adminSubNameEn","adminSubNo","adminSubAlt","adminSubCallout","adminSubQty","adminSubInfo","adminSubInfoEn","adminSubNotes"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});
 }
 function editSubpart(index){
- const p=currentAdminComponent()?.subParts?.[index];if(!p)return;
+ const p=currentAdminSubparts()[index];if(!p)return;
  adminSubpartEditIndex=index;pendingPin={x:p.x,y:p.y};
  document.getElementById("adminSubName").value=p.name||"";
  document.getElementById("adminSubNameEn").value=p.nameEn||"";
@@ -1300,15 +1400,15 @@ function saveSubpart(){
  if(editingPartIndex<0){alert("احفظ المكوّن أولاً، ثم أضف الأجزاء المرقمة.");return;}
  const name=document.getElementById("adminSubName").value.trim();
  if(!name){alert("اكتب اسم الجزء.");return;}
- const component=parts[adminSystemId][editingPartIndex];component.subParts=component.subParts||[];
- const record={name,nameEn:document.getElementById("adminSubNameEn").value.trim(),partNo:document.getElementById("adminSubNo").value.trim(),altNo:document.getElementById("adminSubAlt").value.trim(),callout:document.getElementById("adminSubCallout").value.trim()||String(component.subParts.length+1),qty:document.getElementById("adminSubQty").value.trim(),info:document.getElementById("adminSubInfo").value.trim(),infoEn:document.getElementById("adminSubInfoEn").value.trim(),notes:document.getElementById("adminSubNotes").value.trim(),x:pendingPin.x,y:pendingPin.y};
- if(adminSubpartEditIndex<0)component.subParts.push(record);else component.subParts[adminSubpartEditIndex]=record;
+ const component=parts[adminSystemId][editingPartIndex];const targetSubparts=currentAdminSubparts();
+ const record={name,nameEn:document.getElementById("adminSubNameEn").value.trim(),partNo:document.getElementById("adminSubNo").value.trim(),altNo:document.getElementById("adminSubAlt").value.trim(),callout:document.getElementById("adminSubCallout").value.trim()||String(targetSubparts.length+1),qty:document.getElementById("adminSubQty").value.trim(),info:document.getElementById("adminSubInfo").value.trim(),infoEn:document.getElementById("adminSubInfoEn").value.trim(),notes:document.getElementById("adminSubNotes").value.trim(),x:pendingPin.x,y:pendingPin.y};
+ if(adminSubpartEditIndex<0)targetSubparts.push(record);else targetSubparts[adminSubpartEditIndex]=record;
  saveStore();renderAdminSubparts();clearSubpartForm();
 }
 function deleteSubpart(index){
  const component=currentAdminComponent();if(!component)return;
- const p=component.subParts[index];if(!p||!confirm("حذف الجزء «"+p.name+"»؟"))return;
- component.subParts.splice(index,1);saveStore();renderAdminSubparts();clearSubpartForm();
+ const targetSubparts=currentAdminSubparts();const p=targetSubparts[index];if(!p||!confirm("حذف الجزء «"+p.name+"»؟"))return;
+ targetSubparts.splice(index,1);saveStore();renderAdminSubparts();clearSubpartForm();
 }
 
 function exportData(){
