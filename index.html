@@ -566,7 +566,7 @@ function normalizeData(raw){
  const nextParts={};
  nextSystems.forEach(g=>{
   const arr=(raw.parts&&raw.parts[g[0]])||defaultParts[g[0]]||[];
-  nextParts[g[0]]=arr.map(v=>typeof v==="string"?{name:v,nameEn:"",partNo:"",altNo:"",info:"",infoEn:"",notes:"",notesEn:"",drawingImage:"",subParts:[]}:{name:v.name||"",nameEn:v.nameEn||"",partNo:v.partNo||"",altNo:v.altNo||"",info:v.info||"",infoEn:v.infoEn||"",notes:v.notes||"",notesEn:v.notesEn||"",drawingImage:v.drawingImage||"",drawingImage2:v.drawingImage2||"",additionalImages:Array.isArray(v.additionalImages)?v.additionalImages.filter(x=>typeof x==="string"&&x):[],additionalImageParts:Array.isArray(v.additionalImageParts)?v.additionalImageParts.map(x=>({subParts:Array.isArray(x?.subParts)?x.subParts.map(q=>({...q,x:Number(q.x)||0,y:Number(q.y)||0})):[]})):(Array.isArray(v.additionalImages)?v.additionalImages.map(()=>({subParts:[]})):[]),subParts:Array.isArray(v.subParts)?v.subParts.map(x=>({name:x.name||"",nameEn:x.nameEn||"",partNo:x.partNo||"",altNo:x.altNo||"",info:x.info||"",infoEn:x.infoEn||"",notes:x.notes||"",notesEn:x.notesEn||"",callout:x.callout||"",qty:x.qty??"",x:Number(x.x)||0,y:Number(x.y)||0})):[]});
+  nextParts[g[0]]=arr.map(v=>typeof v==="string"?{name:v,nameEn:"",partNo:"",altNo:"",info:"",infoEn:"",notes:"",notesEn:"",drawingImage:"",subParts:[]}:{name:v.name||"",nameEn:v.nameEn||"",partNo:v.partNo||"",altNo:v.altNo||"",info:v.info||"",infoEn:v.infoEn||"",notes:v.notes||"",notesEn:v.notesEn||"",drawingImage:v.drawingImage||"",drawingImage2:v.drawingImage2||"",additionalImages:Array.isArray(v.additionalImages)?v.additionalImages.filter(x=>typeof x==="string"&&x):[],additionalImageParts:Array.isArray(v.additionalImageParts)?v.additionalImageParts.map(x=>({subParts:Array.isArray(x?.subParts)?x.subParts.map(q=>({...q,x:Number(q.x)||0,y:Number(q.y)||0,positions:Array.isArray(q.positions)?q.positions.map(z=>({x:Number(z.x)||0,y:Number(z.y)||0})):[]})):[]})):(Array.isArray(v.additionalImages)?v.additionalImages.map(()=>({subParts:[]})):[]),subParts:Array.isArray(v.subParts)?v.subParts.map(x=>({name:x.name||"",nameEn:x.nameEn||"",partNo:x.partNo||"",altNo:x.altNo||"",info:x.info||"",infoEn:x.infoEn||"",notes:x.notes||"",notesEn:x.notesEn||"",callout:x.callout||"",qty:x.qty??"",x:Number(x.x)||0,y:Number(x.y)||0,positions:Array.isArray(x.positions)?x.positions.map(z=>({x:Number(z.x)||0,y:Number(z.y)||0})):[]})):[]});
  });
  return {systems:nextSystems.map(g=>[String(g[0]),String(g[1]||""),String(g[2]||""),String(g[3]||""),String(g[4]||"")]),parts:nextParts};
 }
@@ -1117,12 +1117,16 @@ function renderActiveComponent(){
   if(!img||!img.isConnected)return;
   stage.querySelectorAll(".diagram-marker").forEach(n=>n.remove());
   subparts.forEach((p,i)=>{
-   const pos=imageRelativeStagePosition(img,stage,p.x,p.y);
-   const marker=document.createElement("button");
-   marker.className="diagram-marker"+(i===currentSubpartIndex?" active":"");
-   marker.style.left=pos.left+"%";marker.style.top=pos.top+"%";
-   marker.title=displayName(p.name,p.nameEn);marker.textContent=p.callout||String(i+1);
-   marker.onclick=()=>selectSubpart(i);stage.appendChild(marker);
+   const locations=Array.isArray(p.positions)&&p.positions.length?p.positions:[{x:p.x,y:p.y}];
+   locations.forEach((location,locationIndex)=>{
+    const pos=imageRelativeStagePosition(img,stage,location.x,location.y);
+    const marker=document.createElement("button");
+    marker.className="diagram-marker"+(i===currentSubpartIndex?" active":"");
+    marker.dataset.partIndex=String(i);marker.dataset.locationIndex=String(locationIndex);
+    marker.style.left=pos.left+"%";marker.style.top=pos.top+"%";
+    marker.title=displayName(p.name,p.nameEn);marker.textContent=p.callout||String(i+1);
+    marker.onclick=()=>selectSubpart(i);stage.appendChild(marker);
+   });
   });
  };
  if(img){if(img.complete){requestAnimationFrame(()=>{drawMarkers();applyDiagramTransform();});}else img.onload=()=>{requestAnimationFrame(()=>{drawMarkers();applyDiagramTransform();});};}
@@ -1147,9 +1151,11 @@ function applyDiagramTransform(){
  if(stage&&img){
   const activeComponent=(parts[active]||[])[currentComponentIndex];
   const subparts=activeComponent?activeComponentSubparts(activeComponent):[];
-  stage.querySelectorAll(".diagram-marker").forEach((marker,i)=>{
-   const p=subparts[i];if(!p)return;
-   const pos=imageRelativeStagePosition(img,stage,p.x,p.y);
+  stage.querySelectorAll(".diagram-marker").forEach(marker=>{
+   const p=subparts[Number(marker.dataset.partIndex)];if(!p)return;
+   const locations=Array.isArray(p.positions)&&p.positions.length?p.positions:[{x:p.x,y:p.y}];
+   const location=locations[Number(marker.dataset.locationIndex)]||locations[0];
+   const pos=imageRelativeStagePosition(img,stage,location.x,location.y);
    marker.style.left=pos.left+"%";marker.style.top=pos.top+"%";
   });
  }
@@ -1304,6 +1310,8 @@ function deleteComponent(index){
 
 let adminDrawingData="",adminDrawingData2="",adminPinImageIndex=0;
 let adminSubpartEditIndex=-1;
+let adminSubpartAddPosition=false;
+let adminSubpartAddPositionPicked=false;
 let pendingPin={x:50,y:50};
 function loadAdminDrawing(event,which=1){
  const file=event.target.files?.[0];if(!file)return;
@@ -1357,7 +1365,7 @@ function renderAdminPinStage(){
   if(event.target.closest("button"))return;
   // Clicking an existing yellow marker opens that exact saved part for editing.
   const existingPin=event.target.closest(".admin-pin[data-part-index]");
-  if(existingPin){
+  if(existingPin&&!adminSubpartAddPosition){
    editSubpart(Number(existingPin.dataset.partIndex));
    const hint=stage.querySelector(".admin-pin-hint");
    if(hint)hint.textContent="تم اختيار الجزء للتعديل — اضغط على الموقع الجديد في الرسم ثم احفظ الجزء";
@@ -1370,6 +1378,7 @@ function renderAdminPinStage(){
   const x=Math.max(0,Math.min(100,(event.clientX-rect.left)/rect.width*100));
   const y=Math.max(0,Math.min(100,(event.clientY-rect.top)/rect.height*100));
   pendingPin={x,y};
+  if(adminSubpartAddPosition)adminSubpartAddPositionPicked=true;
   stage.classList.add("pin-position-picked");
   let hint=stage.querySelector(".admin-pin-hint");
   if(!hint){
@@ -1391,15 +1400,17 @@ function drawAdminPins(){
  const fragment=document.createDocumentFragment();
  const pins=currentAdminSubparts();
  pins.forEach((p,i)=>{
-  const pos=imageRelativeStagePosition(img,stage,p.x,p.y);
-  const pin=document.createElement("span");
-  pin.className="admin-pin";
-  pin.dataset.partIndex=String(i);
-  pin.title="اضغط لتعديل موضع هذا الجزء";
-  pin.style.left=pos.left+"%";
-  pin.style.top=pos.top+"%";
-  pin.textContent=p.callout||String(i+1);
-  fragment.appendChild(pin);
+  const locations=Array.isArray(p.positions)&&p.positions.length?p.positions:[{x:p.x,y:p.y}];
+  locations.forEach((location,locationIndex)=>{
+   const pos=imageRelativeStagePosition(img,stage,location.x,location.y);
+   const pin=document.createElement("span");
+   pin.className="admin-pin";
+   pin.dataset.partIndex=String(i);pin.dataset.locationIndex=String(locationIndex);
+   pin.title="اضغط لتعديل بيانات الجزء";
+   pin.style.left=pos.left+"%";pin.style.top=pos.top+"%";
+   pin.textContent=p.callout||String(i+1);
+   fragment.appendChild(pin);
+  });
  });
  stage.querySelectorAll(".admin-pin").forEach(n=>n.remove());
  stage.appendChild(fragment);
@@ -1417,11 +1428,11 @@ function renderAdminSubparts(){
  const list=document.getElementById("adminSubpartList");if(!list)return;
  const rows=currentAdminSubparts();
  document.getElementById("adminSubpartCount").textContent=rows.length;
- list.innerHTML=rows.length?rows.map((p,i)=>`<div class="admin-subpart-row"><span>${esc(p.callout||i+1)} · ${esc(displayName(p.name,p.nameEn))} ${p.partNo?"— "+esc(p.partNo):""} ${p.qty?"· الكمية: "+esc(p.qty):""}</span><button class="admin-part-edit" onclick="editSubpart(${i})">تعديل</button><button class="admin-part-delete" onclick="deleteSubpart(${i})">حذف</button></div>`).join(""):'<div class="admin-empty">لا توجد أجزاء مرقمة بعد</div>';
+ list.innerHTML=rows.length?rows.map((p,i)=>`<div class="admin-subpart-row"><span>${esc(p.callout||i+1)} · ${esc(displayName(p.name,p.nameEn))} ${p.partNo?"— "+esc(p.partNo):""} ${p.qty?"· الكمية: "+esc(p.qty):""}</span><button class="admin-part-edit" onclick="editSubpart(${i})">تعديل</button><button class="admin-part-edit" onclick="addSubpartPosition(${i})">إضافة موضع</button><button class="admin-part-delete" onclick="deleteSubpart(${i})">حذف</button></div>`).join(""):'<div class="admin-empty">لا توجد أجزاء مرقمة بعد</div>';
  renderAdminPinStage();
 }
 function clearSubpartForm(){
- adminSubpartEditIndex=-1;pendingPin={x:50,y:50};
+ adminSubpartEditIndex=-1;adminSubpartAddPosition=false;adminSubpartAddPositionPicked=false;pendingPin={x:50,y:50};
  const pinStage=document.getElementById("adminPinStage");if(pinStage){pinStage.classList.remove("pin-position-picked");pinStage.querySelector(".admin-pin-hint")?.remove();}
  ["adminSubName","adminSubNameEn","adminSubNo","adminSubAlt","adminSubCallout","adminSubQty","adminSubInfo","adminSubInfoEn","adminSubNotes"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});
 }
@@ -1439,13 +1450,30 @@ function editSubpart(index){
  document.getElementById("adminSubNotes").value=p.notes||"";
  renderAdminPinStage();
 }
+function addSubpartPosition(index){
+ const p=currentAdminSubparts()[index];if(!p)return;
+ editSubpart(index);
+ adminSubpartAddPosition=true;adminSubpartAddPositionPicked=false;
+ const hint=document.querySelector("#adminPinStage .admin-pin-hint")||document.createElement("div");
+ hint.className="admin-pin-hint";hint.textContent="اضغط على الموضع الإضافي لنفس القطعة في الرسم، ثم اضغط «حفظ الجزء»";
+ document.getElementById("adminPinStage").appendChild(hint);
+}
 function saveSubpart(){
  if(editingPartIndex<0){alert("احفظ المكوّن أولاً، ثم أضف الأجزاء المرقمة.");return;}
  const name=document.getElementById("adminSubName").value.trim();
  if(!name){alert("اكتب اسم الجزء.");return;}
+ if(adminSubpartAddPosition&&!adminSubpartAddPositionPicked){alert("اضغط أولاً على الموضع الجديد للقطعة في الرسم.");return;}
  const component=parts[adminSystemId][editingPartIndex];const targetSubparts=currentAdminSubparts();
- const record={name,nameEn:document.getElementById("adminSubNameEn").value.trim(),partNo:document.getElementById("adminSubNo").value.trim(),altNo:document.getElementById("adminSubAlt").value.trim(),callout:document.getElementById("adminSubCallout").value.trim()||String(targetSubparts.length+1),qty:document.getElementById("adminSubQty").value.trim(),info:document.getElementById("adminSubInfo").value.trim(),infoEn:document.getElementById("adminSubInfoEn").value.trim(),notes:document.getElementById("adminSubNotes").value.trim(),x:pendingPin.x,y:pendingPin.y};
- if(adminSubpartEditIndex<0)targetSubparts.push(record);else targetSubparts[adminSubpartEditIndex]=record;
+ const record={name,nameEn:document.getElementById("adminSubNameEn").value.trim(),partNo:document.getElementById("adminSubNo").value.trim(),altNo:document.getElementById("adminSubAlt").value.trim(),callout:document.getElementById("adminSubCallout").value.trim()||String(targetSubparts.length+1),qty:document.getElementById("adminSubQty").value.trim(),info:document.getElementById("adminSubInfo").value.trim(),infoEn:document.getElementById("adminSubInfoEn").value.trim(),notes:document.getElementById("adminSubNotes").value.trim(),x:pendingPin.x,y:pendingPin.y,positions:[{x:pendingPin.x,y:pendingPin.y}]};
+ if(adminSubpartAddPosition&&adminSubpartEditIndex>=0){
+  const existing=targetSubparts[adminSubpartEditIndex];
+  const locations=Array.isArray(existing.positions)&&existing.positions.length?existing.positions:[{x:existing.x,y:existing.y}];
+  existing.positions=[...locations,{x:pendingPin.x,y:pendingPin.y}];
+ }else if(adminSubpartEditIndex<0)targetSubparts.push(record);else{
+  const existing=targetSubparts[adminSubpartEditIndex];
+  record.positions=Array.isArray(existing.positions)&&existing.positions.length?existing.positions:[{x:pendingPin.x,y:pendingPin.y}];
+  targetSubparts[adminSubpartEditIndex]=record;
+ }
  saveStore();renderAdminSubparts();clearSubpartForm();
 }
 function deleteSubpart(index){
