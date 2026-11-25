@@ -1,4 +1,4 @@
-<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>دليل معدات JCB 3CX / 4CX</title>
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>دليل معدات JCB 3CX / 3DX</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;600;700;800&display=swap');
 :root{--bg:#111820;--panel:#1b2632;--panel2:#243243;--line:#46586a;--yellow:#f5b91b;--white:#f6f7f8;--muted:#b7c2ce}
@@ -389,7 +389,7 @@ html[dir="ltr"] .diagram-zoom-tools{right:auto;left:12px}
 <header class="kanara-header"><div class="brand kanara-brand"><span class="kanara-name">كنارة</span><span class="brand-divider"></span><span class="brand-title">دليل المعدات وقطع الغيار</span></div><nav><button id="languageToggle" class="language-toggle" onclick="toggleLanguage()">English</button><button class="admin-entry" onclick="openAdmin()">⚙ لوحة التحكم</button></nav></header>
 <main>
 <aside class="sidebar panel"><div class="paneltitle" id="sidebarTitle">القائمة الرئيسية</div><div id="systemButtons"></div><div class="small" style="margin-top:auto;padding:8px">يمكنك إضافة أرقام القطع والشرح والصور لكل مكوّن.</div></aside>
-<section class="center panel"><div class="centerbar"><div class="tabs" id="modelTabs"><button class="active" id="tab3" onclick="setModel('3CX')">3CX</button><button id="tab4" onclick="setModel('4CX')">4CX</button></div><div class="hint" id="mainHint">اختر مجموعة أو اضغط على نقطة بالمعدة</div><button id="backHomeBtn" class="workspace-back" onclick="showHome()" hidden>⌂ الرئيسية</button></div>
+<section class="center panel"><div class="centerbar"><div class="tabs" id="modelTabs"><button class="active" id="tab3" onclick="setModel('3CX')">3CX</button><button id="tab4" onclick="setModel('3DX')">3DX</button></div><div class="hint" id="mainHint">اختر مجموعة أو اضغط على نقطة بالمعدة</div><button id="backHomeBtn" class="workspace-back" onclick="showHome()" hidden>⌂ الرئيسية</button></div>
 <div class="machineview" id="machineView">
 <iframe id="sketchfabViewer" class="sketchfab-viewer" loading="lazy"
  title="نموذج JCB 3CX ثلاثي الأبعاد قابل للدوران"
@@ -429,7 +429,7 @@ html[dir="ltr"] .diagram-zoom-tools{right:auto;left:12px}
 <div class="system-workspace" id="systemWorkspace" aria-hidden="true">
  <div class="workspace-shell">
   <div class="workspace-top">
-   <div><div class="workspace-eyebrow">JCB 3CX / 4CX · EQUIPMENT SYSTEMS</div><h2 id="workspaceTitle">المكينة</h2><p id="workspaceDesc">مكونات وأقسام النظام</p></div>
+   <div><div class="workspace-eyebrow">JCB 3CX / 3DX · EQUIPMENT SYSTEMS</div><h2 id="workspaceTitle">المكينة</h2><p id="workspaceDesc">مكونات وأقسام النظام</p></div>
    <button class="workspace-close" onclick="closeSystemWorkspace()" aria-label="إغلاق">×</button>
   </div>
   <div class="workspace-body">
@@ -558,6 +558,7 @@ const systemIcons={engine:"⚙️",exhaust:"♨️",cooling:"❄️",lubrication
 let systems=defaultSystems.map(x=>[...x]);
 let parts={};
 let active="engine",model="3CX",adminSystemId="engine",editingPartIndex=-1,expandedSystemId="";
+let modelCatalogs={"3CX":null,"3DX":null};
 let currentComponentIndex=-1,currentSubpartIndex=-1,currentView="home";
 const homeMachineStageHTML=document.getElementById("machineStage").innerHTML;
 function normalizeData(raw){
@@ -706,10 +707,18 @@ async function pullCatalogFromCloud(){
  supabaseSession=sessionData?.session||null;
  const {data,error}=await supabaseClient.from(SUPABASE_TABLE).select("data").eq("id","main").maybeSingle();
  if(error)throw error;
- if(data?.data && Array.isArray(data.data.systems) && data.data.parts){
-  const normalized=normalizeData(data.data);
-  systems=normalized.systems;parts=normalized.parts;
-  await writeCatalogDB({systems,parts,savedAt:new Date().toISOString(),source:"supabase"});
+ if(data?.data){
+  const payload=data.data;
+  if(payload.models && payload.models["3CX"]){
+   modelCatalogs["3CX"]=normalizeData(payload.models["3CX"]);
+   modelCatalogs["3DX"]=normalizeData(payload.models["3DX"]||makeEmpty3DXCatalog());
+  }else if(Array.isArray(payload.systems)&&payload.parts){
+   // Legacy catalog: preserve all existing records as 3CX and initialize an independent 3DX catalog.
+   modelCatalogs["3CX"]=normalizeData(payload);
+   modelCatalogs["3DX"]=modelCatalogs["3DX"]||normalizeData(makeEmpty3DXCatalog());
+  }
+  if(modelCatalogs[model]){systems=modelCatalogs[model].systems;parts=modelCatalogs[model].parts;}
+  await writeCatalogDB(buildCatalogSnapshot());
   render();
   return true;
  }
@@ -753,16 +762,33 @@ function writeCatalogDB(snapshot){
  saveQueue=task.catch(()=>{});
  return task;
 }
+function makeEmpty3DXCatalog(){
+ const cleanSystems=defaultSystems.map(x=>[...x]);
+ const cleanParts={};cleanSystems.forEach(g=>cleanParts[g[0]]=[]);
+ return {systems:cleanSystems,parts:cleanParts};
+}
+function buildCatalogSnapshot(){
+ modelCatalogs[model]={systems:JSON.parse(JSON.stringify(systems)),parts:JSON.parse(JSON.stringify(parts))};
+ return {models:{
+  "3CX":modelCatalogs["3CX"]||normalizeData({systems:defaultSystems,parts:defaultParts}),
+  "3DX":modelCatalogs["3DX"]||normalizeData(makeEmpty3DXCatalog())
+ },savedAt:new Date().toISOString()};
+}
+function activateModelCatalog(m){
+ const d=modelCatalogs[m]||normalizeData(m==="3CX"?{systems:defaultSystems,parts:defaultParts}:makeEmpty3DXCatalog());
+ modelCatalogs[m]=d;systems=JSON.parse(JSON.stringify(d.systems));parts=JSON.parse(JSON.stringify(d.parts));
+ active=systems[0]?.[0]||"";expandedSystemId=active;adminSystemId=active;currentView="home";currentComponentIndex=-1;currentSubpartIndex=-1;
+}
 function saveStore(){
- const snapshot={systems:JSON.parse(JSON.stringify(systems)),parts:JSON.parse(JSON.stringify(parts)),savedAt:new Date().toISOString()};
+ const snapshot=buildCatalogSnapshot();
  return writeCatalogDB(snapshot).then(async()=>{
   if(initSupabase()){
    try{
     const result=await pushCatalogToCloud(snapshot);
     if(result.skipped)return true;
     if(result.saved&&result.snapshot){
-     systems=result.snapshot.systems;parts=result.snapshot.parts;
-     await writeCatalogDB({systems,parts,savedAt:new Date().toISOString(),source:"supabase"});
+     if(result.snapshot.models){modelCatalogs=result.snapshot.models;activateModelCatalog(model);}
+     await writeCatalogDB(result.snapshot);
     }
    }catch(e){
     console.error("Supabase save failed",e);
@@ -780,20 +806,31 @@ function saveStore(){
 async function loadStore(){
  try{
   const stored=await readCatalogDB();
+  if(stored&&stored.models){
+   modelCatalogs["3CX"]=normalizeData(stored.models["3CX"]||{systems:defaultSystems,parts:defaultParts});
+   modelCatalogs["3DX"]=normalizeData(stored.models["3DX"]||makeEmpty3DXCatalog());
+   activateModelCatalog(model);return;
+  }
   if(stored&&Array.isArray(stored.systems)&&stored.parts){
-   const d=normalizeData(stored);systems=d.systems;parts=d.parts;return;
+   // One-time migration: the previous single catalog belongs to 3CX.
+   modelCatalogs["3CX"]=normalizeData(stored);
+   modelCatalogs["3DX"]=normalizeData(makeEmpty3DXCatalog());
+   activateModelCatalog(model);
+   await writeCatalogDB(buildCatalogSnapshot());return;
   }
   const legacy=localStorage.getItem("kanara_equipment_catalog_v1");
   if(legacy){
-   const d=normalizeData(JSON.parse(legacy));systems=d.systems;parts=d.parts;
-   await writeCatalogDB({systems,parts,savedAt:new Date().toISOString(),migratedFrom:"localStorage"});
-   return;
+   modelCatalogs["3CX"]=normalizeData(JSON.parse(legacy));
+   modelCatalogs["3DX"]=normalizeData(makeEmpty3DXCatalog());
+   activateModelCatalog(model);await writeCatalogDB(buildCatalogSnapshot());return;
   }
  }catch(e){
   console.error("Catalog storage initialization failed",e);
   alert("تعذر فتح التخزين المحلي المتقدم. جرّب فتح الملف في Edge أو Chrome، ولا تحذف النسخة القديمة من بياناتك.");
  }
- const d=normalizeData({systems:defaultSystems,parts:defaultParts});systems=d.systems;parts=d.parts;
+ modelCatalogs["3CX"]=normalizeData({systems:defaultSystems,parts:defaultParts});
+ modelCatalogs["3DX"]=normalizeData(makeEmpty3DXCatalog());
+ activateModelCatalog(model);
 }
 function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 function toggleSystemAccordion(id){
@@ -873,14 +910,20 @@ function selectSystem(id){
  active=id;expandedSystemId=id;currentView="home";currentComponentIndex=-1;currentSubpartIndex=-1;
  showHome();
 }
-function setModel(m){
- model=m;
- document.getElementById("tab3").classList.toggle("active",m==="3CX");
- document.getElementById("tab4").classList.toggle("active",m==="4CX");
+async function setModel(m){
+ if(m!=="3CX"&&m!=="3DX")return;
+ if(m===model){
+  document.getElementById("tab3").classList.toggle("active",m==="3CX");
+  document.getElementById("tab4").classList.toggle("active",m==="3DX");return;
+ }
+ // Persist the current machine's working catalog before switching datasets.
+ await writeCatalogDB(buildCatalogSnapshot());
+ model=m;activateModelCatalog(model);
+ showHome();renderAdmin();
 }
 function showHome(){
  currentView="home";currentComponentIndex=-1;currentSubpartIndex=-1;
- document.getElementById("modelTabs").innerHTML=`<button class="${model==="3CX"?"active":""}" id="tab3" onclick="setModel('3CX')">3CX</button><button class="${model==="4CX"?"active":""}" id="tab4" onclick="setModel('4CX')">4CX</button>`;
+ document.getElementById("modelTabs").innerHTML=`<button class="${model==="3CX"?"active":""}" id="tab3" onclick="setModel('3CX')">3CX</button><button class="${model==="3DX"?"active":""}" id="tab4" onclick="setModel('3DX')">3DX</button>`;
  const view=document.getElementById("machineView");
  view.classList.remove("component-mode","real-3d");
  document.getElementById("machineStage").innerHTML=homeMachineStageHTML;
