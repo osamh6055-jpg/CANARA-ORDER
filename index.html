@@ -384,9 +384,28 @@ html[dir="ltr"] header.kanara-header nav{direction:ltr;margin-inline-start:0;mar
 html[dir="ltr"] .diagram-zoom-tools{right:auto;left:12px}
 @media(max-width:1050px){html[dir="ltr"] main{grid-template-columns:235px minmax(330px,1fr)}}
 </style>
+<style id="kanara-catalog-search-style">
+/* Header catalog search: centered beside the guide title */
+header.kanara-header{justify-content:initial}
+header.kanara-header .catalog-search{position:relative;flex:1 1 430px;max-width:560px;min-width:220px;margin-inline:auto;z-index:110}
+.catalog-search input{width:100%;height:42px;border:1px solid #66798c;border-radius:10px;background:#1b2937;color:#fff;padding:9px 14px;font:600 14px Tajawal;outline:none}
+.catalog-search input:focus{border-color:var(--yellow);box-shadow:0 0 0 3px #f5b91b25}
+.catalog-search input::placeholder{color:#aebdca}
+.catalog-search-results{position:absolute;top:calc(100% + 7px);right:0;left:0;max-height:min(65vh,520px);overflow:auto;background:#172330;border:1px solid #66798c;border-radius:11px;box-shadow:0 15px 38px #000a;padding:6px}
+.catalog-search-results[hidden]{display:none!important}
+.catalog-search-result{display:flex;flex-direction:column;gap:4px;width:100%;padding:10px 12px;margin:2px 0;text-align:right;background:#223344;border:1px solid #43596e;border-radius:8px;color:#fff;cursor:pointer;font:600 13px Tajawal}
+.catalog-search-result:hover,.catalog-search-result:focus{border-color:var(--yellow);background:#344252;outline:none}
+.catalog-search-result strong{color:var(--yellow);font-size:14px}
+.catalog-search-result small{color:#b8c7d5;font-size:11px;line-height:1.5}
+.catalog-search-empty{padding:13px;color:#c4cfda;text-align:center;font-size:13px}
+html[dir="ltr"] .catalog-search-results{text-align:left}
+html[dir="ltr"] .catalog-search-result{text-align:left}
+@media(max-width:900px){header.kanara-header{flex-wrap:wrap;height:auto;min-height:76px;padding:10px 14px}.kanara-brand{flex:0 1 auto}.catalog-search{order:3;flex-basis:100%!important;max-width:none!important;margin:0!important}header.kanara-header nav{margin-inline-start:auto}}
+@media(max-width:650px){header.kanara-header .catalog-search{order:3}.catalog-search input{height:40px}}
+</style>
 
 </head><body>
-<header class="kanara-header"><div class="brand kanara-brand"><span class="kanara-name">كنارة</span><span class="brand-divider"></span><span class="brand-title">دليل المعدات وقطع الغيار</span></div><nav><button id="languageToggle" class="language-toggle" onclick="toggleLanguage()">English</button><button class="admin-entry" onclick="openAdmin()">⚙ لوحة التحكم</button></nav></header>
+<header class="kanara-header"><div class="brand kanara-brand"><span class="kanara-name">كنارة</span><span class="brand-divider"></span><span class="brand-title">دليل المعدات وقطع الغيار</span></div><div class="catalog-search" id="catalogSearch"><input id="catalogSearchInput" type="search" autocomplete="off" placeholder="ابحث برقم القطعة أو الاسم أو الرقم البديل" aria-label="بحث في دليل المعدات وقطع الغيار" oninput="searchCatalog(this.value)" onkeydown="handleCatalogSearchKey(event)"><div class="catalog-search-results" id="catalogSearchResults" hidden></div></div><nav><button id="languageToggle" class="language-toggle" onclick="toggleLanguage()">English</button><button class="admin-entry" onclick="openAdmin()">⚙ لوحة التحكم</button></nav></header>
 <main>
 <aside class="sidebar panel"><div class="paneltitle" id="sidebarTitle">القائمة الرئيسية</div><div id="systemButtons"></div><div class="small" style="margin-top:auto;padding:8px">يمكنك إضافة أرقام القطع والشرح والصور لكل مكوّن.</div></aside>
 <section class="center panel"><div class="centerbar"><div class="tabs" id="modelTabs"><button class="active" id="tab3" onclick="setModel('3CX')">3CX</button><button id="tab4" onclick="setModel('3DX')">3DX</button></div><div class="hint" id="mainHint">اختر مجموعة أو اضغط على نقطة بالمعدة</div><button id="backHomeBtn" class="workspace-back" onclick="showHome()" hidden>⌂ الرئيسية</button></div>
@@ -589,6 +608,7 @@ function applyLanguage(){
  if(toggle)toggle.textContent=en?"العربية":"English";
  const admin=document.querySelector(".admin-entry");if(admin)admin.textContent=en?"⚙ Control Panel":"⚙ لوحة التحكم";
  const brand=document.querySelector(".brand-title");if(brand)brand.textContent=en?"Equipment & Spare Parts Guide":"دليل المعدات وقطع الغيار";
+ const searchInput=document.getElementById("catalogSearchInput");if(searchInput)searchInput.placeholder=en?"Search by part number, name or alternative number":"ابحث برقم القطعة أو الاسم أو الرقم البديل";
  const sidebar=document.getElementById("sidebarTitle");if(sidebar)sidebar.textContent=en?(currentView==="component"?"Component Parts":"Main Menu"):(currentView==="component"?"أجزاء المكوّن":"القائمة الرئيسية");
  const hint=document.querySelector(".centerbar .hint");if(hint)hint.textContent=en?"Choose a system or select a machine point":"اختر مجموعة أو اضغط على نقطة بالمعدة";
  const empty=document.querySelector(".sidebar .small");if(empty)empty.textContent=en?"Add part numbers, descriptions and images to each component from Control Panel.":"يمكنك إضافة أرقام القطع والشرح والصور لكل مكوّن.";
@@ -838,6 +858,77 @@ function toggleSystemAccordion(id){
  else{expandedSystemId=id;active=id;}
  render();
 }
+
+let catalogSearchMatches=[];
+function searchCatalog(raw){
+ const input=document.getElementById("catalogSearchInput");
+ const host=document.getElementById("catalogSearchResults");
+ if(!input||!host)return;
+ const query=String(raw||"").trim().toLocaleLowerCase();
+ host.innerHTML="";catalogSearchMatches=[];
+ if(!query){host.hidden=true;return;}
+ systems.forEach(group=>{
+  (parts[group[0]]||[]).forEach((component,componentIndex)=>{
+   // Search the main component record and its primary diagram markers.
+   const componentFields=[component.name,component.nameEn,component.partNo,component.altNo].filter(Boolean);
+   if(componentFields.some(value=>String(value).toLocaleLowerCase().includes(query))){
+    catalogSearchMatches.push({systemId:group[0],componentIndex,subpartIndex:-1,imageIndex:-1,componentOnly:true,groupName:displayName(group[1],group[3]),componentName:displayName(component.name,component.nameEn),partName:"",partNo:component.partNo||"",altNo:component.altNo||""});
+   }
+   const mainParts=Array.isArray(component.subParts)?component.subParts:[];
+   mainParts.forEach((part,partIndex)=>{
+    const fields=[part.name,part.nameEn,part.partNo,part.altNo].filter(Boolean);
+    if(fields.some(value=>String(value).toLocaleLowerCase().includes(query))){
+     catalogSearchMatches.push({systemId:group[0],componentIndex,subpartIndex:partIndex,imageIndex:-1,componentOnly:false,groupName:displayName(group[1],group[3]),componentName:displayName(component.name,component.nameEn),partName:displayName(part.name,part.nameEn),partNo:part.partNo||"",altNo:part.altNo||""});
+    }
+   });
+   (component.additionalImageParts||[]).forEach((imageData,imageIndex)=>{
+    (imageData?.subParts||[]).forEach((part,partIndex)=>{
+     const fields=[part.name,part.nameEn,part.partNo,part.altNo].filter(Boolean);
+     if(fields.some(value=>String(value).toLocaleLowerCase().includes(query))){
+      catalogSearchMatches.push({systemId:group[0],componentIndex,subpartIndex:partIndex,imageIndex,componentOnly:false,groupName:displayName(group[1],group[3]),componentName:displayName(component.name,component.nameEn),partName:displayName(part.name,part.nameEn),partNo:part.partNo||"",altNo:part.altNo||""});
+     }
+    });
+   });
+  });
+ });
+ if(!catalogSearchMatches.length){
+  host.innerHTML=`<div class="catalog-search-empty">${appLanguage==="en"?"No matching part or component was found":"لا توجد قطعة أو مكوّن مطابق لبحثك"}</div>`;
+ }else{
+  host.innerHTML=catalogSearchMatches.slice(0,60).map((item,index)=>`<button type="button" class="catalog-search-result" data-search-index="${index}"><strong>${esc(item.partName||item.componentName)}</strong><span>${esc(item.partNo?(appLanguage==="en"?"Part No: ":"رقم القطعة: ")+item.partNo:"")}${item.altNo?(item.partNo?" · ":"")+esc((appLanguage==="en"?"Alternative: ":"البديل: ")+item.altNo):""}</span><small>${esc(item.groupName)} ← ${esc(item.componentName)}${item.imageIndex>=0?" · "+(appLanguage==="en"?"Additional image ":"صورة إضافية ")+(item.imageIndex+1):""}</small></button>`).join("");
+  host.querySelectorAll("[data-search-index]").forEach(button=>button.addEventListener("click",()=>openCatalogSearchResult(Number(button.dataset.searchIndex))));
+ }
+ host.hidden=false;
+}
+function openCatalogSearchResult(index){
+ const item=catalogSearchMatches[index];if(!item)return;
+ const input=document.getElementById("catalogSearchInput");
+ const host=document.getElementById("catalogSearchResults");
+ if(host)host.hidden=true;
+ if(input)input.blur();
+ active=item.systemId;expandedSystemId=item.systemId;
+ openComponent(item.systemId,item.componentIndex);
+ if(!item.componentOnly){
+  activeExtraImageIndex=item.imageIndex>=0?item.imageIndex:-1;
+  activeDiagramImageIndex=0;
+  currentSubpartIndex=item.subpartIndex;
+  resetDiagramZoom();
+  renderActiveComponent();
+ }
+}
+function handleCatalogSearchKey(event){
+ if(event.key==="Escape"){const host=document.getElementById("catalogSearchResults");if(host)host.hidden=true;event.stopPropagation();return;}
+ if(event.key==="Enter"){
+  const host=document.getElementById("catalogSearchResults");
+  const first=host?.querySelector("[data-search-index]");
+  if(first){event.preventDefault();first.click();}
+ }
+}
+document.addEventListener("click",event=>{
+ const search=document.getElementById("catalogSearch");
+ const results=document.getElementById("catalogSearchResults");
+ if(search&&results&&!search.contains(event.target))results.hidden=true;
+});
+
 function render(){
  if(!systems.some(g=>g[0]===active))active=systems[0]?.[0]||"";
  const homeActive=currentView==="home";
@@ -959,15 +1050,18 @@ function openComponent(systemId,index){
 }
 function renderComponentExtraGallery(component){
  const gallery=document.getElementById("componentExtraGallery");
- const images=Array.isArray(component.additionalImages)?component.additionalImages:[];
+ const additionalImages=Array.isArray(component.additionalImages)?component.additionalImages:[];
+ const images=[component.drawingImage,...additionalImages].filter(Boolean);
  const machineView=document.getElementById("machineView");
  gallery.innerHTML="";
  machineView.classList.toggle("gallery-visible",images.length>0);
  if(!images.length)return;
- const title=document.createElement("span");title.className="extra-gallery-title";title.textContent=appLanguage==="en"?`Additional images (${images.length})`:`صور توضيحية (${images.length})`;gallery.appendChild(title);
+ const title=document.createElement("span");title.className="extra-gallery-title";title.textContent=appLanguage==="en"?`Illustration images (${images.length})`:`الصور التوضيحية (${images.length})`;gallery.appendChild(title);
  images.forEach((src,index)=>{
-  const button=document.createElement("button");button.type="button";button.className="extra-gallery-thumb";button.title=(appLanguage==="en"?"Open image ":"عرض الصورة ")+(index+1);button.onclick=()=>selectExtraDiagram(index);
-  const img=document.createElement("img");img.loading="lazy";img.decoding="async";img.src=src;img.alt=(appLanguage==="en"?"Additional image ":"صورة توضيحية ")+(index+1);button.appendChild(img);gallery.appendChild(button);
+  const button=document.createElement("button");button.type="button";button.className="extra-gallery-thumb";
+  button.title=(appLanguage==="en"?"Open image ":"عرض الصورة ")+(index+1);
+  button.onclick=()=>{if(index===0){activeExtraImageIndex=-1;activeDiagramImageIndex=0;currentSubpartIndex=-1;resetDiagramZoom();renderActiveComponent();}else selectExtraDiagram(index-1);};
+  const img=document.createElement("img");img.loading="lazy";img.decoding="async";img.src=src;img.alt=(appLanguage==="en"?"Illustration image ":"صورة توضيحية ")+(index+1);button.appendChild(img);gallery.appendChild(button);
  });
 }
 function selectExtraDiagram(index){
@@ -1125,7 +1219,7 @@ function renderActiveComponent(){
     marker.dataset.partIndex=String(i);marker.dataset.locationIndex=String(locationIndex);
     marker.style.left=pos.left+"%";marker.style.top=pos.top+"%";
     marker.title=displayName(p.name,p.nameEn);marker.textContent=p.callout||String(i+1);
-    marker.onclick=()=>selectSubpart(i);stage.appendChild(marker);
+    marker.onclick=(event)=>{event.preventDefault();event.stopPropagation();selectSubpart(i);};stage.appendChild(marker);
    });
   });
  };
@@ -1204,8 +1298,17 @@ function showSubpartDetails(index){
  document.getElementById("componentCount").textContent=index+1;
 }
 function selectSubpart(index){
- currentSubpartIndex = currentSubpartIndex === index ? -1 : index;
+ const component=(parts[active]||[])[currentComponentIndex];
+ const subparts=component?activeComponentSubparts(component):[];
+ if(!subparts[index])return;
+ currentSubpartIndex=index;
  renderActiveComponent();
+ requestAnimationFrame(()=>{
+  const details=document.getElementById("componentList");
+  const title=document.getElementById("selectedTitle");
+  if(details)details.scrollIntoView({behavior:"smooth",block:"nearest"});
+  if(title)title.scrollIntoView({behavior:"smooth",block:"nearest"});
+ });
 }
 function closeModal(){document.getElementById("modal").style.display="none"}
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(currentView==="component")showHome();closeSystemWorkspace();closeModal();closeAdmin();}});
