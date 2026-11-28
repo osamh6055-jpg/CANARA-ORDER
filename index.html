@@ -752,7 +752,7 @@ function openAdminAfterAuth(){
 }
 
 const DB_NAME="kanara_equipment_catalog_db",DB_VERSION=1,DB_STORE="catalog";
-let dbPromise=null,saveQueue=Promise.resolve();
+let dbPromise=null,saveQueue=Promise.resolve(),cloudSaveQueue=Promise.resolve(),catalogRevision=0;
 function openCatalogDB(){
  if(dbPromise)return dbPromise;
  dbPromise=new Promise((resolve,reject)=>{
@@ -800,21 +800,30 @@ function activateModelCatalog(m){
  active=systems[0]?.[0]||"";expandedSystemId=active;adminSystemId=active;currentView="home";currentComponentIndex=-1;currentSubpartIndex=-1;
 }
 function saveStore(){
+ const revision=++catalogRevision;
  const snapshot=buildCatalogSnapshot();
  return writeCatalogDB(snapshot).then(async()=>{
   if(initSupabase()){
-   try{
-    const result=await pushCatalogToCloud(snapshot);
-    if(result.skipped)return true;
-    if(result.saved&&result.snapshot){
-     if(result.snapshot.models){modelCatalogs=result.snapshot.models;activateModelCatalog(model);}
-     await writeCatalogDB(result.snapshot);
+   // Serialize cloud writes so a slower earlier request cannot overwrite newer edits.
+   const cloudTask=cloudSaveQueue.then(async()=>{
+    try{
+     const result=await pushCatalogToCloud(snapshot);
+     if(result.skipped)return true;
+     if(result.saved&&result.snapshot){
+      // Never replace the live in-memory catalog with an older network response.
+      // Only persist the cloud-normalized copy if no newer edit was made meanwhile.
+      if(revision===catalogRevision)await writeCatalogDB(result.snapshot);
+      return true;
+     }
+     return false;
+    }catch(e){
+     console.error("Supabase save failed",e);
+     alert("تم حفظ التغييرات محلياً، لكن تعذر رفعها إلى Supabase: "+(e.message||"خطأ اتصال")+". تحقق من الاتصال وإعدادات Supabase.");
+     return false;
     }
-   }catch(e){
-    console.error("Supabase save failed",e);
-    alert("تم حفظ التغييرات محلياً، لكن تعذر رفعها إلى Supabase: "+(e.message||"خطأ اتصال")+". تحقق من الاتصال وإعدادات Supabase.");
-    return false;
-   }
+   });
+   cloudSaveQueue=cloudTask.catch(()=>false);
+   return cloudTask;
   }
   return true;
  }).catch(e=>{
@@ -1603,7 +1612,7 @@ function importData(event){
  reader.readAsText(file);
 }
 function moveAirCleanerToAirInletSystem(){
- const key=value=>String(value||"").trim().replace(/\\s+/g," ").toUpperCase();
+ const key=value=>String(value||"").trim().replace(/\s+/g," ").toUpperCase();
  const source=systems.find(group=>[group[1],group[3]].some(name=>key(name)==="BASIC ENGINE"));
  const target=systems.find(group=>[group[1],group[3]].some(name=>key(name)==="AIR INLET AND EXHAUST SYSTEM"));
  if(!source||!target||source[0]===target[0])return false;
