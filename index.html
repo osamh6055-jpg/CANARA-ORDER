@@ -1602,12 +1602,27 @@ function importData(event){
  };
  reader.readAsText(file);
 }
+function moveAirCleanerToAirInletSystem(){
+ const key=value=>String(value||"").trim().replace(/\\s+/g," ").toUpperCase();
+ const source=systems.find(group=>[group[1],group[3]].some(name=>key(name)==="BASIC ENGINE"));
+ const target=systems.find(group=>[group[1],group[3]].some(name=>key(name)==="AIR INLET AND EXHAUST SYSTEM"));
+ if(!source||!target||source[0]===target[0])return false;
+ const sourceItems=parts[source[0]]||[];
+ const itemIndex=sourceItems.findIndex(item=>key(item?.name)==="AIR CLEANER GP"||key(item?.nameEn)==="AIR CLEANER GP");
+ if(itemIndex<0)return false;
+ const item=sourceItems.splice(itemIndex,1)[0];
+ if(!Array.isArray(parts[target[0]]))parts[target[0]]=[];
+ const alreadyThere=parts[target[0]].some(item=>key(item?.name)==="AIR CLEANER GP"||key(item?.nameEn)==="AIR CLEANER GP");
+ if(!alreadyThere)parts[target[0]].push(item);
+ return true;
+}
 async function bootCatalog(){
  await loadStore();
  if(initSupabase()){
   try{await pullCatalogFromCloud();}
   catch(e){console.warn("Supabase catalog load failed; local catalog retained:",e);}
  }
+ if(moveAirCleanerToAirInletSystem())await saveStore();
  active=systems[0]?.[0]||"";
  expandedSystemId=active;
  adminSystemId=active;
